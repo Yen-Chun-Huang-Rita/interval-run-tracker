@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>間歇運動計時器</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f4f9; color: #333; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        input { width: 60px; padding: 5px; margin: 5px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        .btn-pause { background-color: #ffc107; color: #333; }
+        .btn-pause:hover { background-color: #e0a800; }
+        .btn-resume { background-color: #28a745; color: white; }
+        .btn-resume:hover { background-color: #218838; }
+        .btn-small { padding: 5px 10px; font-size: 14px; margin: 0 5px; }
+        .btn-delete { background-color: #dc3545; padding: 4px 8px; font-size: 12px; margin: 0; }
+        .btn-delete:hover { background-color: #c82333; }
+        #timer-display { font-size: 64px; font-weight: bold; margin: 20px 0; color: #333; }
+        #status { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        .walking { background-color: #ffe8cc !important; }
+        .jogging { background-color: #ccffcc !important; }
+        .total-time-preview { font-size: 18px; font-weight: bold; color: #0056b3; margin: 15px 0; padding: 10px; background-color: #e9ecef; border-radius: 5px; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .history-section { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .action-btns { margin-bottom: 15px; display: flex; justify-content: center; }
+    </style>
+</head>
+<body id="bg">
+
+<div class="container">
+    <h2>⏱️ 間歇運動計時器</h2>
+    
+    <div id="setup">
+        <label>快走 (分鐘): <input type="number" id="walk-min" value="1" step="0.1" oninput="calculateTotalTime()"></label><br>
+        <label>慢跑 (分鐘): <input type="number" id="jog-min" value="1" step="0.1" oninput="calculateTotalTime()"></label><br>
+        <label>總組數: <input type="number" id="sets" value="5" oninput="calculateTotalTime()"></label><br>
+        
+        <div class="total-time-preview">
+            預估總時間: <span id="est-total-time">9.0</span> 分鐘
+        </div>
+
+        <button onclick="startWorkout()">開始訓練</button>
+    </div>
+
+    <div id="workout-area" style="display:none;">
+        <div id="status">準備中...</div>
+        <div id="timer-display">00:00</div>
+        <div id="set-display"></div>
+        <p style="font-size: 12px; color: #666;">💡 提示：訓練期間螢幕將保持恆亮，請勿鎖定螢幕以免計時暫停。</p>
+        <button id="pause-btn" class="btn-pause" onclick="togglePause()">暫停</button>
+        <button onclick="finishWorkout()" style="background-color: #dc3545;">結束訓練</button>
+    </div>
+
+    <div class="history-section">
+        <h3>📋 運動紀錄</h3>
+        <div class="action-btns">
+            <button class="btn-small" onclick="downloadCSV()" style="background-color: #17a2b8;">下載 CSV</button>
+            <button class="btn-small" onclick="clearAllRecords()" style="background-color: #dc3545;">清空紀錄</button>
+        </div>
+        <table id="history-table">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>設定(分)</th>
+                    <th>總時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let timer;
+    let isWalkingPhase = true;
+    let isPaused = false;
+    let currentSet = 1;
+    let totalSets = 0;
+    let walkSec = 0;
+    let jogSec = 0;
+    let timeLeft = 0;
+    let audioCtx;
+    let wakeLock = null;
+
+    // --- 新增：安全讀寫紀錄 (抗 Safari 崩潰保護) ---
+    function getHistory() {
+        try {
+            return JSON.parse(localStorage.getItem('workoutHistory')) || [];
+        } catch (e) {
+            console.warn("無法讀取紀錄，可能是瀏覽器安全限制");
+            return [];
+        }
+    }
+
+    function saveHistoryData(history) {
+        try {
+            localStorage.setItem('workoutHistory', JSON.stringify(history));
+        } catch (e) {
+            console.warn("無法儲存紀錄，可能是瀏覽器安全限制");
+        }
+    }
+    // ---------------------------------------------
+
+    window.onload = function() {
+        updateHistoryTable();
+        calculateTotalTime();
+    };
+
+    function calculateTotalTime() {
+        let wMin = parseFloat(document.getElementById('walk-min').value) || 0;
+        let jMin = parseFloat(document.getElementById('jog-min').value) || 0;
+        let s = parseInt(document.getElementById('sets').value) || 0;
+        
+        if (s > 0 && wMin >= 0 && jMin >= 0) {
+            let totalMin = (wMin * s) + (jMin * (s - 1));
+            document.getElementById('est-total-time').innerText = totalMin.toFixed(1);
+        } else {
+            document.getElementById('est-total-time').innerText = "0.0";
+        }
+    }
+
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.log('螢幕喚醒失敗');
+            }
+        }
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock !== null) {
+            wakeLock.release().then(() => {
+                wakeLock = null;
+            });
+        }
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        try {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0; 
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start(0);
+            osc.stop(audioCtx.currentTime + 0.001);
+        } catch(e) {}
+    }
+
+    function playBeep(freq, type, duration) {
+        if (!audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    function startWorkout() {
+        initAudio(); 
+        requestWakeLock(); 
+        
+        let wMin = parseFloat(document.getElementById('walk-min').value);
+        let jMin = parseFloat(document.getElementById('jog-min').value);
+        totalSets = parseInt(document.getElementById('sets').value);
+
+        if (isNaN(wMin) || isNaN(jMin) || isNaN(totalSets) || wMin <= 0 || jMin <= 0 || totalSets <= 0) {
+            alert("請輸入有效的數字！");
+            return;
+        }
+
+        walkSec = Math.round(wMin * 60);
+        jogSec = Math.round(jMin * 60);
+
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('workout-area').style.display = 'block';
+        
+        currentSet = 1;
+        isWalkingPhase = true;
+        isPaused = false;
+        timeLeft = walkSec;
+        
+        resetPauseButton();
+        updateUI();
+        
+        clearInterval(timer);
+        timer = setInterval(countdown, 1000);
+    }
+
+    function togglePause() {
+        isPaused = !isPaused;
+        const btn = document.getElementById('pause-btn');
+        if (isPaused) {
+            btn.innerText = "繼續";
+            btn.className = "btn-resume";
+        } else {
+            btn.innerText = "暫停";
+            btn.className = "btn-pause";
+        }
+    }
+
+    function resetPauseButton() {
+        const btn = document.getElementById('pause-btn');
+        btn.innerText = "暫停";
+        btn.className = "btn-pause";
+    }
+
+    function countdown() {
+        if (isPaused) return;
+
+        timeLeft--;
+        updateUI();
+
+        if (timeLeft <= 5 && timeLeft > 0) {
+            playBeep(1000, "sine", 0.15); 
+        }
+
+        if (timeLeft <= 0) {
+            if (isWalkingPhase) {
+                if (currentSet >= totalSets) {
+                    playBeep(600, "square", 0.8);
+                    finishWorkout();
+                    return;
+                }
+                isWalkingPhase = false;
+                timeLeft = jogSec;
+                playBeep(800, "square", 0.5); 
+            } else {
+                currentSet++;
+                isWalkingPhase = true;
+                timeLeft = walkSec;
+                playBeep(800, "square", 0.5); 
+            }
+            updateUI();
+        }
+    }
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function updateUI() {
+        document.getElementById('timer-display').innerText = formatTime(timeLeft);
+        document.getElementById('set-display').innerText = `第 ${currentSet} 組 / 共 ${totalSets} 組`;
+        
+        const statusEl = document.getElementById('status');
+        const bg = document.getElementById('bg');
+
+        if (isWalkingPhase) {
+            statusEl.innerText = "🚶 快走階段";
+            statusEl.style.color = "#d35400";
+            bg.className = "walking";
+        } else {
+            statusEl.innerText = "🏃 慢跑階段";
+            statusEl.style.color = "#27ae60";
+            bg.className = "jogging";
+        }
+    }
+
+    function finishWorkout() {
+        clearInterval(timer);
+        releaseWakeLock(); 
+        document.getElementById('status').innerText = "🎉 訓練完成！";
+        document.getElementById('bg').className = "";
+        document.getElementById('timer-display').innerText = "00:00";
+        
+        saveRecord();
+        
+        setTimeout(() => {
+            alert("太棒了！辛苦了！");
+            document.getElementById('setup').style.display = 'block';
+            document.getElementById('workout-area').style.display = 'none';
+        }, 500);
+    }
+
+    function saveRecord() {
+        const totalTimeMin = (((walkSec * totalSets) + (jogSec * (totalSets - 1))) / 60).toFixed(1);
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        
+        const wMin = document.getElementById('walk-min').value;
+        const jMin = document.getElementById('jog-min').value;
+
+        const record = { date: dateStr, setting: `快${wMin}/慢${jMin}/${totalSets}組`, total: totalTimeMin };
+        
+        let history = getHistory();
+        history.push(record);
+        saveHistoryData(history);
+        
+        updateHistoryTable();
+    }
+
+    function updateHistoryTable() {
+        let history = getHistory();
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = '';
+        
+        for (let i = history.length - 1; i >= 0; i--) {
+            let row = history[i];
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.date}</td>
+                <td>${row.setting}</td>
+                <td>${row.total}</td>
+                <td><button class="btn-delete" onclick="deleteRecord(${i})">刪除</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    function deleteRecord(index) {
+        if (confirm("確定要刪除這筆紀錄嗎？")) {
+            let history = getHistory();
+            history.splice(index, 1);
+            saveHistoryData(history);
+            updateHistoryTable(); 
+        }
+    }
+
+    function clearAllRecords() {
+        let history = getHistory();
+        if (history.length === 0) {
+            alert("目前沒有紀錄可以清空喔！");
+            return;
+        }
+        if (confirm("確定要清空「所有」運動紀錄嗎？這個動作無法復原喔！")) {
+            try {
+                localStorage.removeItem('workoutHistory');
+            } catch(e) {}
+            updateHistoryTable();
+        }
+    }
+
+    function downloadCSV() {
+        let history = getHistory();
+        if (history.length === 0) {
+            alert("目前沒有紀錄可供下載！");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        csvContent += "日期,設定(快走分/慢跑分/組數),總花費時間(分)\n";
+        
+        history.forEach(row => {
+            csvContent += `${row.date},${row.setting},${row.total}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "workout_log.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
