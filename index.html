@@ -40,7 +40,7 @@
         <label>總組數: <input type="number" id="sets" value="5" oninput="calculateTotalTime()"></label><br>
         
         <div class="total-time-preview">
-            預估總時間: <span id="est-total-time">9.0</span> 分鐘
+            預估總時間: <span id="est-total-time">10.0</span> 分鐘
         </div>
 
         <button onclick="startWorkout()">開始訓練</button>
@@ -87,12 +87,11 @@
     let audioCtx;
     let wakeLock = null;
 
-    // --- 新增：安全讀寫紀錄 (抗 Safari 崩潰保護) ---
     function getHistory() {
         try {
             return JSON.parse(localStorage.getItem('workoutHistory')) || [];
         } catch (e) {
-            console.warn("無法讀取紀錄，可能是瀏覽器安全限制");
+            console.warn("無法讀取紀錄");
             return [];
         }
     }
@@ -101,10 +100,9 @@
         try {
             localStorage.setItem('workoutHistory', JSON.stringify(history));
         } catch (e) {
-            console.warn("無法儲存紀錄，可能是瀏覽器安全限制");
+            console.warn("無法儲存紀錄");
         }
     }
-    // ---------------------------------------------
 
     window.onload = function() {
         updateHistoryTable();
@@ -117,7 +115,8 @@
         let s = parseInt(document.getElementById('sets').value) || 0;
         
         if (s > 0 && wMin >= 0 && jMin >= 0) {
-            let totalMin = (wMin * s) + (jMin * (s - 1));
+            // 修正：總時間 = (快走 + 慢跑) * 組數
+            let totalMin = (wMin + jMin) * s;
             document.getElementById('est-total-time').innerText = totalMin.toFixed(1);
         } else {
             document.getElementById('est-total-time').innerText = "0.0";
@@ -128,9 +127,7 @@
         if ('wakeLock' in navigator) {
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {
-                console.log('螢幕喚醒失敗');
-            }
+            } catch (err) {}
         }
     }
 
@@ -240,15 +237,17 @@
 
         if (timeLeft <= 0) {
             if (isWalkingPhase) {
+                // 修正：快走結束後，不論第幾組都一定會進入慢跑
+                isWalkingPhase = false;
+                timeLeft = jogSec;
+                playBeep(800, "square", 0.5); 
+            } else {
+                // 修正：慢跑結束後，才判斷是不是最後一組
                 if (currentSet >= totalSets) {
                     playBeep(600, "square", 0.8);
                     finishWorkout();
                     return;
                 }
-                isWalkingPhase = false;
-                timeLeft = jogSec;
-                playBeep(800, "square", 0.5); 
-            } else {
                 currentSet++;
                 isWalkingPhase = true;
                 timeLeft = walkSec;
@@ -299,7 +298,8 @@
     }
 
     function saveRecord() {
-        const totalTimeMin = (((walkSec * totalSets) + (jogSec * (totalSets - 1))) / 60).toFixed(1);
+        // 修正：歷史紀錄的總時間計算
+        const totalTimeMin = (((walkSec + jogSec) * totalSets) / 60).toFixed(1);
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         
