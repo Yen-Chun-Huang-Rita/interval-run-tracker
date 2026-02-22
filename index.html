@@ -1,3 +1,11 @@
+沒問題！為了讓你在運動時，不管是拿在手上還是放在稍微遠一點的桌子上，都能一眼看清楚畫面，我把整體的字體、輸入框和按鈕都放大了，尤其是計時器的數字變得更醒目！
+我們一樣直接在 GitHub 上進行修改，這樣最快也不會出錯：
+🛠️ 在 GitHub 上放大字體的步驟：
+	1	進入你的 GitHub 專案頁面，點擊檔案列表中的 index.html。
+	2	點擊右上角的 「鉛筆圖示」 (Edit this file)。
+	3	把裡面舊的程式碼全部刪除，替換成下面這個「大字體升級版」：
+HTML
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -5,28 +13,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>間歇運動計時器</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f4f9; color: #333; padding: 20px; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        input { width: 60px; padding: 5px; margin: 5px; text-align: center; }
-        button { padding: 10px 20px; font-size: 16px; margin-top: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        /* 整體基礎字體放大 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f4f9; color: #333; padding: 20px; font-size: 20px; }
+        .container { max-width: 450px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* 標題與輸入框放大 */
+        h2 { font-size: 32px; margin-bottom: 20px; }
+        label { font-size: 22px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        input { width: 80px; padding: 8px; margin: 5px; text-align: center; font-size: 22px; border: 1px solid #ccc; border-radius: 5px; }
+        
+        /* 按鈕放大並增加點擊範圍 */
+        button { padding: 15px 30px; font-size: 22px; font-weight: bold; margin-top: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 8px; }
         button:hover { background-color: #0056b3; }
         .btn-pause { background-color: #ffc107; color: #333; }
         .btn-pause:hover { background-color: #e0a800; }
         .btn-resume { background-color: #28a745; color: white; }
         .btn-resume:hover { background-color: #218838; }
-        .btn-small { padding: 5px 10px; font-size: 14px; margin: 0 5px; }
-        .btn-delete { background-color: #dc3545; padding: 4px 8px; font-size: 12px; margin: 0; }
+        .btn-small { padding: 10px 15px; font-size: 18px; margin: 0 5px; }
+        .btn-delete { background-color: #dc3545; padding: 6px 12px; font-size: 16px; margin: 0; }
         .btn-delete:hover { background-color: #c82333; }
-        #timer-display { font-size: 64px; font-weight: bold; margin: 20px 0; color: #333; }
-        #status { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        
+        /* 計時器與狀態文字大幅放大 */
+        #timer-display { font-size: 90px; font-weight: bold; margin: 25px 0; color: #333; }
+        #status { font-size: 36px; font-weight: bold; margin-bottom: 15px; }
+        #set-display { font-size: 24px; font-weight: bold; color: #555; margin-bottom: 20px; }
+        
+        /* 背景色提示 */
         .walking { background-color: #ffe8cc !important; }
         .jogging { background-color: #ccffcc !important; }
-        .total-time-preview { font-size: 18px; font-weight: bold; color: #0056b3; margin: 15px 0; padding: 10px; background-color: #e9ecef; border-radius: 5px; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        
+        /* 總時間與表格文字放大 */
+        .total-time-preview { font-size: 24px; font-weight: bold; color: #0056b3; margin: 20px 0; padding: 15px; background-color: #e9ecef; border-radius: 8px; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 18px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f2f2f2; }
-        .history-section { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-        .action-btns { margin-bottom: 15px; display: flex; justify-content: center; }
+        .history-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 25px; }
+        .action-btns { margin-bottom: 20px; display: flex; justify-content: center; }
     </style>
 </head>
 <body id="bg">
@@ -50,7 +72,7 @@
         <div id="status">準備中...</div>
         <div id="timer-display">00:00</div>
         <div id="set-display"></div>
-        <p style="font-size: 12px; color: #666;">💡 提示：訓練期間螢幕將保持恆亮，請勿鎖定螢幕以免計時暫停。</p>
+        <p style="font-size: 16px; color: #666;">💡 提示：訓練期間螢幕將保持恆亮，請勿鎖定螢幕以免計時暫停。</p>
         <button id="pause-btn" class="btn-pause" onclick="togglePause()">暫停</button>
         <button onclick="finishWorkout()" style="background-color: #dc3545;">結束訓練</button>
     </div>
@@ -115,7 +137,6 @@
         let s = parseInt(document.getElementById('sets').value) || 0;
         
         if (s > 0 && wMin >= 0 && jMin >= 0) {
-            // 修正：總時間 = (快走 + 慢跑) * 組數
             let totalMin = (wMin + jMin) * s;
             document.getElementById('est-total-time').innerText = totalMin.toFixed(1);
         } else {
@@ -237,12 +258,10 @@
 
         if (timeLeft <= 0) {
             if (isWalkingPhase) {
-                // 修正：快走結束後，不論第幾組都一定會進入慢跑
                 isWalkingPhase = false;
                 timeLeft = jogSec;
                 playBeep(800, "square", 0.5); 
             } else {
-                // 修正：慢跑結束後，才判斷是不是最後一組
                 if (currentSet >= totalSets) {
                     playBeep(600, "square", 0.8);
                     finishWorkout();
@@ -298,7 +317,6 @@
     }
 
     function saveRecord() {
-        // 修正：歷史紀錄的總時間計算
         const totalTimeMin = (((walkSec + jogSec) * totalSets) / 60).toFixed(1);
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
