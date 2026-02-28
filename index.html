@@ -2,8 +2,17 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>雁君的間歇訓練計時器 💪</title>
+
+  <!-- PWA：開機自動啟動 & 持續運作 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="間歇訓練">
+  <link rel="apple-touch-icon" href="icon.svg">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
     :root {
@@ -133,9 +142,48 @@
     .btn-del:hover { background: rgba(239,68,68,.15); color: #f87171; }
     .confetti-piece { position: fixed; top: -10px; border-radius: 2px; animation: confetti-fall linear forwards; pointer-events: none; z-index: 999; }
     @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* PWA 安裝提示橫幅 */
+    #install-banner {
+      display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 40px); max-width: 420px;
+      background: linear-gradient(135deg, rgba(102,126,234,.95), rgba(118,75,162,.95));
+      backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 18px; padding: 14px 16px;
+      display: none; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5); z-index: 1000; animation: slideUp .4s ease;
+    }
+    #install-banner.visible { display: flex; }
+    #install-banner .banner-text { flex: 1; font-size: .85rem; color: #fff; font-weight: 700; line-height: 1.4; }
+    #install-banner .banner-text small { font-weight: 400; opacity: .75; font-size: .75rem; display: block; margin-top: 2px; }
+    #install-banner .btn-install { padding: 8px 16px; border: none; border-radius: 10px; background: #fff; color: #667eea; font-size: .82rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    #install-banner .btn-install:hover { background: #f0f0ff; }
+    #install-banner .btn-dismiss { width: 28px; height: 28px; border: none; background: rgba(255,255,255,.15); border-radius: 50%; color: #fff; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+    #install-banner .btn-dismiss:hover { background: rgba(255,255,255,.25); }
+
+    /* 離線狀態提示 */
+    #offline-notice {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(239,68,68,.9); color: #fff; text-align: center;
+      padding: 8px; font-size: .82rem; font-weight: 700; z-index: 1001;
+    }
+    #offline-notice.visible { display: block; }
   </style>
 </head>
 <body>
+<!-- 離線通知 -->
+<div id="offline-notice">📴 目前離線 — 應用程式已快取，可正常使用</div>
+
+<!-- PWA 安裝提示橫幅 -->
+<div id="install-banner">
+  <div class="banner-text">
+    📲 安裝到主畫面
+    <small>開機自動啟動，隨時可用！</small>
+  </div>
+  <button class="btn-install" id="btn-install-pwa">安裝</button>
+  <button class="btn-dismiss" onclick="dismissInstallBanner()">✕</button>
+</div>
+
 <div class="bg-particles" id="bg-particles"></div>
 <div class="app">
   <div class="header">
@@ -353,11 +401,18 @@ function speak(text, rate = 1.05, pitch = 1.25) {
   window.speechSynthesis.speak(u);
 }
 
-// ── Wake Lock（防止螢幕自動關閉）─────────────────────────────────────────────
+// ── Wake Lock（防止螢幕自動關閉，訓練中自動重新取得）────────────────────────
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch {}
-  }
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    // 當 Wake Lock 被系統釋放時（例如畫面暗掉後回來），自動重新取得
+    wakeLock.addEventListener('release', () => {
+      if (workoutStartTime !== null && !isPaused && !document.hidden) {
+        requestWakeLock();
+      }
+    });
+  } catch {}
 }
 function releaseWakeLock() {
   if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
@@ -443,6 +498,7 @@ function togglePause() {
     clearInterval(timer);
     btn.textContent = '▶ 繼續'; btn.classList.add('is-paused');
     speak('已暫停，喘口氣，等你回來！', 1.0, 1.2);
+    saveWorkoutState(); // 儲存暫停狀態
   } else {
     totalPausedMs += Date.now() - pauseStartTime;
     pauseStartTime = null;
@@ -450,6 +506,7 @@ function togglePause() {
     timer = setInterval(countdown, 500);
     btn.textContent = '⏸ 暫停'; btn.classList.remove('is-paused');
     speak('繼續！雁君最棒了！衝衝衝！', 1.1, 1.3);
+    saveWorkoutState();
   }
 }
 function resetPauseBtn() {
@@ -502,6 +559,7 @@ function countdown() {
     }
     updateTimerDisplay();
     updateTimerArc();
+    saveWorkoutState(); // 每秒儲存狀態，讓重開後可繼續
   }
 }
 
@@ -509,6 +567,7 @@ function finishWorkout(completed) {
   clearInterval(timer);
   releaseWakeLock();
   workoutStartTime = null;
+  clearWorkoutState(); // 清除儲存的訓練狀態
   if (completed) {
     saveRecord();
     launchConfetti();
@@ -649,6 +708,95 @@ function launchConfetti() {
   }
 }
 
+// ── 訓練狀態持久化（頁面關閉 / 重開後可繼續）────────────────────────────────
+function saveWorkoutState() {
+  if (workoutStartTime === null) {
+    localStorage.removeItem('activeWorkout');
+    return;
+  }
+  localStorage.setItem('activeWorkout', JSON.stringify({
+    walkSec, jogSec, totalSets,
+    workoutStartTime,
+    totalPausedMs,
+    isPaused,
+    pauseStartTime: isPaused ? pauseStartTime : null,
+    walkMin: document.getElementById('walk-min').value,
+    jogMin:  document.getElementById('jog-min').value
+  }));
+}
+
+function clearWorkoutState() {
+  localStorage.removeItem('activeWorkout');
+}
+
+function checkResumeWorkout() {
+  const raw = localStorage.getItem('activeWorkout');
+  if (!raw) return;
+  let s;
+  try { s = JSON.parse(raw); } catch { localStorage.removeItem('activeWorkout'); return; }
+
+  // 計算目前已過時間，確認訓練是否還在進行中
+  const pausedExtra = s.isPaused && s.pauseStartTime ? (Date.now() - s.pauseStartTime) : 0;
+  const elapsed = Date.now() - s.workoutStartTime - s.totalPausedMs - pausedExtra;
+  const total = s.totalSets * (s.walkSec + s.jogSec) * 1000;
+  if (elapsed >= total) { localStorage.removeItem('activeWorkout'); return; }
+
+  if (!confirm('找到未完成的訓練！要繼續嗎？\n\n（點「確定」恢復訓練，點「取消」放棄）')) {
+    localStorage.removeItem('activeWorkout');
+    return;
+  }
+  resumeSavedWorkout(s);
+}
+
+function resumeSavedWorkout(s) {
+  walkSec   = s.walkSec;
+  jogSec    = s.jogSec;
+  totalSets = s.totalSets;
+  workoutStartTime = s.workoutStartTime;
+  totalPausedMs    = s.totalPausedMs;
+  isPaused         = s.isPaused;
+  pauseStartTime   = s.pauseStartTime;
+
+  document.getElementById('walk-min').value = s.walkMin;
+  document.getElementById('jog-min').value  = s.jogMin;
+  document.getElementById('sets').value     = s.totalSets;
+
+  initAudio();
+  requestWakeLock();
+  buildSchedule();
+
+  document.getElementById('setup').style.display         = 'none';
+  document.getElementById('workout-area').style.display  = 'block';
+  document.getElementById('active-workout').style.display = 'block';
+  document.getElementById('completion-screen').style.display = 'none';
+
+  buildPhaseBar();
+
+  const elapsedMs = getElapsedMs();
+  const state     = getStateAt(elapsedMs);
+  if (state) {
+    isWalkPhase   = state.phase === 'walk';
+    currentSet    = state.set;
+    timeLeft      = state.timeLeft;
+    phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+  }
+
+  updateUI();
+  resetPauseBtn();
+
+  if (isPaused) {
+    const btn = document.getElementById('pause-btn');
+    btn.textContent = '▶ 繼續'; btn.classList.add('is-paused');
+    speak('找到你未完成的訓練，已暫停。按繼續就出發！', 1.05, 1.25);
+  } else {
+    speak('歡迎回來！繼續你的訓練！雁君加油！', 1.05, 1.25);
+    clearInterval(timer);
+    timer = setInterval(countdown, 500);
+  }
+}
+
 // ── 運動紀錄 ─────────────────────────────────────────────────────────────────
 function saveRecord() {
   const totalMin = (((walkSec + jogSec) * totalSets) / 60).toFixed(1);
@@ -691,15 +839,70 @@ function downloadCSV() {
   a.download = 'workout_log.csv'; a.click();
 }
 
+// ── PWA 安裝提示 ───────────────────────────────────────────────────────────────
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  document.getElementById('install-banner').classList.add('visible');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').classList.remove('visible');
+  _deferredInstallPrompt = null;
+});
+document.getElementById('btn-install-pwa').addEventListener('click', async () => {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  const { outcome } = await _deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('install-banner').classList.remove('visible');
+  }
+  _deferredInstallPrompt = null;
+});
+function dismissInstallBanner() {
+  document.getElementById('install-banner').classList.remove('visible');
+}
+
+// ── 離線 / 在線偵測 ───────────────────────────────────────────────────────────
+function updateOnlineStatus() {
+  const notice = document.getElementById('offline-notice');
+  if (!navigator.onLine) {
+    notice.classList.add('visible');
+  } else {
+    notice.classList.remove('visible');
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
 // ── 初始化 ────────────────────────────────────────────────────────────────────
 window.onload = () => {
   initParticles();
   calcTotal();
   updateHistoryTable();
+  updateOnlineStatus();
   if (window.speechSynthesis) {
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = () => { _femaleVoice = null; pickFemaleVoice(); };
   }
+
+  // 註冊 Service Worker（讓 App 可離線使用 + 背景持續運作）
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // 有新版本 SW 等待時，自動更新
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }).catch(() => {});
+  }
+
+  // 開啟時檢查是否有未完成的訓練，若有則詢問是否繼續
+  checkResumeWorkout();
 };
 </script>
 </body>

@@ -1,0 +1,20 @@
+{
+  "name": "雁君的間歇訓練計時器",
+  "short_name": "間歇訓練",
+  "description": "間歇訓練計時器 - 幫助你完成快走與慢跑交替訓練，強迫開機持續運作",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1a1a2e",
+  "theme_color": "#667eea",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
