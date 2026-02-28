@@ -6,569 +6,193 @@
   <title>雁君的間歇訓練計時器 💪</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-
     :root {
-      --walk-from: #f7971e;
-      --walk-to: #ffd200;
-      --jog-from: #11998e;
-      --jog-to: #38ef7d;
-      --rest-from: #667eea;
-      --rest-to: #764ba2;
+      --walk-from: #f7971e; --walk-to: #ffd200;
+      --jog-from: #11998e;  --jog-to: #38ef7d;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow-x: hidden;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; overflow-x: hidden;
     }
-
-    /* Animated background particles */
-    .bg-particles {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.15;
-      animation: float linear infinite;
-    }
+    .bg-particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; border-radius: 50%; opacity: 0.15; animation: float linear infinite; }
     @keyframes float {
-      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.15; }
-      90% { opacity: 0.15; }
+      0%   { transform: translateY(100vh) rotate(0deg);   opacity: 0; }
+      10%  { opacity: 0.15; }
+      90%  { opacity: 0.15; }
       100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
     }
-
-    .app {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 420px;
-    }
-
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-      animation: slideDown 0.6s ease;
-    }
-    @keyframes slideDown {
-      from { transform: translateY(-30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .header h1 {
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 2px;
-      text-shadow: 0 0 20px rgba(255,255,255,0.3);
-    }
-    .header .subtitle {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.5);
-      margin-top: 4px;
-      letter-spacing: 1px;
-    }
-
-    /* ── Card ── */
+    .app { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+    .header { text-align: center; margin-bottom: 24px; animation: slideDown .6s ease; }
+    @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .header h1 { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,255,255,.3); }
+    .header .subtitle { font-size: .85rem; color: rgba(255,255,255,.5); margin-top: 4px; letter-spacing: 1px; }
     .card {
-      background: rgba(255, 255, 255, 0.07);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 28px;
-      padding: 28px 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      animation: slideUp 0.6s ease;
+      background: rgba(255,255,255,.07); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 28px;
+      padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      animation: slideUp .6s ease;
     }
-    @keyframes slideUp {
-      from { transform: translateY(30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* ── Setup Panel ── */
-    #setup { display: block; }
-    .section-title {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.4);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .input-group {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .section-title { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+    .input-group { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
     .input-group:last-of-type { border-bottom: none; }
-    .input-label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.85);
-      font-weight: 700;
-    }
-    .input-label .emoji { font-size: 1.3rem; }
-    .input-label .unit {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.4);
-      font-weight: 400;
-    }
-
-    .number-control {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .input-label { display: flex; align-items: center; gap: 10px; font-size: .95rem; color: rgba(255,255,255,.85); font-weight: 700; }
+    .input-label .unit { font-size: .75rem; color: rgba(255,255,255,.4); font-weight: 400; }
+    .number-control { display: flex; align-items: center; gap: 8px; }
     .num-btn {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255,255,255,0.12);
-      color: #fff;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-      line-height: 1;
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,.12); color: #fff; font-size: 1.2rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s;
     }
-    .num-btn:hover { background: rgba(255,255,255,0.22); transform: scale(1.1); }
-    .num-btn:active { transform: scale(0.95); }
+    .num-btn:hover { background: rgba(255,255,255,.22); transform: scale(1.1); }
+    .num-btn:active { transform: scale(.95); }
     .num-input {
-      width: 52px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 1.05rem;
-      font-weight: 700;
-      text-align: center;
-      padding: 6px 4px;
-      outline: none;
-      font-family: inherit;
+      width: 52px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 700;
+      text-align: center; padding: 6px 4px; outline: none; font-family: inherit;
     }
-    .num-input:focus { border-color: rgba(255,255,255,0.5); }
-
-    /* Total time preview */
+    .num-input:focus { border-color: rgba(255,255,255,.5); }
     .total-preview {
-      margin: 20px 0;
-      background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2));
-      border: 1px solid rgba(102,126,234,0.3);
-      border-radius: 16px;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      margin: 20px 0; background: linear-gradient(135deg, rgba(102,126,234,.2), rgba(118,75,162,.2));
+      border: 1px solid rgba(102,126,234,.3); border-radius: 16px; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .total-preview .label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    .total-preview .label { font-size: .85rem; color: rgba(255,255,255,.6); }
     .total-preview .value { font-size: 1.4rem; font-weight: 900; color: #a78bfa; }
-
-    /* Start button */
     .btn-start {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 900;
-      letter-spacing: 2px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 8px 24px rgba(102,126,234,0.4);
-      position: relative;
-      overflow: hidden;
+      width: 100%; padding: 16px; border: none; border-radius: 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+      font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; cursor: pointer;
+      transition: all .2s; box-shadow: 0 8px 24px rgba(102,126,234,.4);
+      position: relative; overflow: hidden;
     }
     .btn-start::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.4s;
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transition: left .4s;
     }
     .btn-start:hover::before { left: 100%; }
-    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,0.5); }
-    .btn-start:active { transform: translateY(0); }
-
-    /* ── Workout Panel ── */
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,.5); }
     #workout-area { display: none; }
-
-    /* Phase indicator */
-    .phase-bar {
-      display: flex;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 20px;
-      height: 6px;
-      gap: 3px;
-    }
-    .phase-seg {
-      flex: 1;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.1);
-      transition: background 0.3s;
-    }
+    .phase-bar { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 20px; height: 6px; gap: 3px; }
+    .phase-seg { flex: 1; border-radius: 3px; background: rgba(255,255,255,.1); transition: background .3s; }
     .phase-seg.walk-done { background: linear-gradient(90deg, var(--walk-from), var(--walk-to)); }
-    .phase-seg.jog-done { background: linear-gradient(90deg, var(--jog-from), var(--jog-to)); }
-    .phase-seg.active { background: rgba(255,255,255,0.6); animation: pulse-seg 0.8s ease-in-out infinite alternate; }
-    @keyframes pulse-seg { from { opacity: 0.6; } to { opacity: 1; } }
-
-    /* Status */
-    .status-row {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 6px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 900;
-      letter-spacing: 1px;
-      transition: all 0.4s ease;
-    }
-    .badge-walk {
-      background: linear-gradient(135deg, var(--walk-from), var(--walk-to));
-      color: #1a1a2e;
-      box-shadow: 0 4px 16px rgba(247,151,30,0.4);
-    }
-    .badge-jog {
-      background: linear-gradient(135deg, var(--jog-from), var(--jog-to));
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(17,153,142,0.4);
-    }
-    .badge-done {
-      background: linear-gradient(135deg, #f093fb, #f5576c);
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(245,87,108,0.4);
-    }
-
-    /* Set info */
-    .set-info {
-      text-align: center;
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 10px;
-      letter-spacing: 1px;
-    }
-
-    /* Circular timer */
-    .timer-container {
-      position: relative;
-      width: 220px;
-      height: 220px;
-      margin: 0 auto 20px;
-    }
-    .timer-svg {
-      width: 100%;
-      height: 100%;
-      transform: rotate(-90deg);
-    }
-    .timer-track {
-      fill: none;
-      stroke: rgba(255,255,255,0.08);
-      stroke-width: 8;
-    }
-    .timer-progress {
-      fill: none;
-      stroke-width: 8;
-      stroke-linecap: round;
-      stroke-dasharray: 628;
-      stroke-dashoffset: 0;
-      transition: stroke-dashoffset 0.9s linear, stroke 0.4s ease;
-    }
-    .timer-inner {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-    }
-    .timer-display {
-      font-size: 3.2rem;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 2px;
-      line-height: 1;
-      text-shadow: 0 0 30px rgba(255,255,255,0.3);
-    }
-    .timer-label {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.35);
-      letter-spacing: 1px;
-      margin-top: 4px;
-    }
-
-    /* Motivation message */
-    .motivation {
-      text-align: center;
-      font-size: 0.92rem;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 20px;
-      min-height: 22px;
-      font-style: italic;
-      transition: opacity 0.3s;
-    }
-
-    /* Control buttons */
-    .control-btns {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-    .btn-control {
-      flex: 1;
-      padding: 13px 10px;
-      border: none;
-      border-radius: 14px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.5px;
-    }
-    .btn-pause-resume {
-      background: linear-gradient(135deg, #f7971e, #ffd200);
-      color: #1a1a2e;
-      box-shadow: 0 4px 14px rgba(247,151,30,0.3);
-    }
-    .btn-pause-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(247,151,30,0.4); }
-    .btn-pause-resume.is-paused {
-      background: linear-gradient(135deg, #11998e, #38ef7d);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(17,153,142,0.3);
-    }
-    .btn-stop {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.6);
-      box-shadow: none;
-    }
-    .btn-stop:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #f87171; }
-
-    /* Countdown warning animation */
-    @keyframes heartbeat {
-      0%, 100% { transform: scale(1); }
-      14% { transform: scale(1.12); }
-      28% { transform: scale(1); }
-      42% { transform: scale(1.08); }
-      70% { transform: scale(1); }
-    }
-    .heartbeat { animation: heartbeat 0.8s ease; }
-
-    /* Completion celebration */
-    .celebration {
-      text-align: center;
-      padding: 10px 0;
-    }
-    .celebration .trophy { font-size: 3.5rem; display: block; margin-bottom: 8px; animation: bounce 0.6s ease infinite alternate; }
+    .phase-seg.jog-done  { background: linear-gradient(90deg, var(--jog-from),  var(--jog-to)); }
+    .phase-seg.active { background: rgba(255,255,255,.6); animation: pulse-seg .8s ease-in-out infinite alternate; }
+    @keyframes pulse-seg { from { opacity: .6; } to { opacity: 1; } }
+    .status-row { text-align: center; margin-bottom: 16px; }
+    .status-badge { display: inline-block; padding: 6px 20px; border-radius: 50px; font-size: .9rem; font-weight: 900; letter-spacing: 1px; transition: all .4s ease; }
+    .badge-walk { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #1a1a2e; box-shadow: 0 4px 16px rgba(247,151,30,.4); }
+    .badge-jog  { background: linear-gradient(135deg, var(--jog-from),  var(--jog-to));  color: #fff;    box-shadow: 0 4px 16px rgba(17,153,142,.4); }
+    .set-info { text-align: center; font-size: .82rem; color: rgba(255,255,255,.4); margin-bottom: 10px; letter-spacing: 1px; }
+    .timer-container { position: relative; width: 220px; height: 220px; margin: 0 auto 20px; }
+    .timer-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .timer-track    { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 8; }
+    .timer-progress { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 628; stroke-dashoffset: 0; transition: stroke-dashoffset .9s linear, stroke .4s ease; }
+    .timer-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+    .timer-display { font-size: 3.2rem; font-weight: 900; color: #fff; letter-spacing: 2px; line-height: 1; text-shadow: 0 0 30px rgba(255,255,255,.3); }
+    .timer-label   { font-size: .7rem; color: rgba(255,255,255,.35); letter-spacing: 1px; margin-top: 4px; }
+    .motivation { text-align: center; font-size: .92rem; color: rgba(255,255,255,.7); margin-bottom: 20px; min-height: 22px; font-style: italic; transition: opacity .3s; }
+    .control-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+    .btn-control { flex: 1; padding: 13px 10px; border: none; border-radius: 14px; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
+    .btn-pause-resume { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; box-shadow: 0 4px 14px rgba(247,151,30,.3); }
+    .btn-pause-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(247,151,30,.4); }
+    .btn-pause-resume.is-paused { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; box-shadow: 0 4px 14px rgba(17,153,142,.3); }
+    .btn-stop { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.6); }
+    .btn-stop:hover { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.4); color: #f87171; }
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.12)} 28%{transform:scale(1)} 42%{transform:scale(1.08)} 70%{transform:scale(1)} }
+    .heartbeat { animation: heartbeat .8s ease; }
+    .celebration { text-align: center; padding: 10px 0; }
+    .celebration .trophy { font-size: 3.5rem; display: block; margin-bottom: 8px; animation: bounce .6s ease infinite alternate; }
     @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-    .celebration .congrats { font-size: 1.3rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .celebration .congrats     { font-size: 1.3rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
     .celebration .personal-msg { font-size: 1rem; color: #ffd200; font-weight: 700; margin-bottom: 8px; }
-    .celebration .encourage { font-size: 0.88rem; color: rgba(255,255,255,0.6); }
+    .celebration .encourage    { font-size: .88rem; color: rgba(255,255,255,.6); }
     .btn-finish {
-      margin-top: 16px;
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #f093fb, #f5576c);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 900;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 1px;
-      box-shadow: 0 6px 20px rgba(245,87,108,0.35);
+      margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff;
+      font-size: 1rem; font-weight: 900; cursor: pointer; transition: all .2s;
+      letter-spacing: 1px; box-shadow: 0 6px 20px rgba(245,87,108,.35);
     }
-    .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,87,108,0.5); }
-
-    /* ── History ── */
-    .history-section {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-    .history-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .history-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.5);
-      letter-spacing: 1px;
-    }
+    .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,87,108,.5); }
+    .history-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.08); }
+    .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .history-title { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.5); letter-spacing: 1px; }
     .history-actions { display: flex; gap: 6px; }
-    .btn-small {
-      padding: 5px 12px;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px;
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.55);
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-small:hover { background: rgba(255,255,255,0.12); color: #fff; }
-
-    .history-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-    }
-    .history-table th {
-      color: rgba(255,255,255,0.3);
-      font-weight: 700;
-      padding: 6px 4px;
-      text-align: left;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-    }
-    .history-table td {
-      color: rgba(255,255,255,0.65);
-      padding: 7px 4px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
+    .btn-small { padding: 5px 12px; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.55); font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .btn-small:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .history-table th { color: rgba(255,255,255,.3); font-weight: 700; padding: 6px 4px; text-align: left; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .history-table td { color: rgba(255,255,255,.65); padding: 7px 4px; border-bottom: 1px solid rgba(255,255,255,.04); }
     .history-table tr:last-child td { border-bottom: none; }
-    .btn-del {
-      padding: 3px 8px;
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 5px;
-      background: transparent;
-      color: rgba(239,68,68,0.6);
-      font-size: 0.7rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-del:hover { background: rgba(239,68,68,0.15); color: #f87171; }
-
-    /* Confetti */
-    .confetti-piece {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      top: -10px;
-      animation: confetti-fall linear forwards;
-      pointer-events: none;
-      z-index: 999;
-    }
-    @keyframes confetti-fall {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
+    .btn-del { padding: 3px 8px; border: 1px solid rgba(239,68,68,.3); border-radius: 5px; background: transparent; color: rgba(239,68,68,.6); font-size: .7rem; cursor: pointer; transition: all .15s; }
+    .btn-del:hover { background: rgba(239,68,68,.15); color: #f87171; }
+    .confetti-piece { position: fixed; top: -10px; border-radius: 2px; animation: confetti-fall linear forwards; pointer-events: none; z-index: 999; }
+    @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
   </style>
 </head>
 <body>
-
-<!-- Background Particles -->
 <div class="bg-particles" id="bg-particles"></div>
-
 <div class="app">
   <div class="header">
     <h1>💪 間歇訓練計時器</h1>
     <div class="subtitle">雁君的專屬運動夥伴</div>
   </div>
-
   <div class="card">
 
-    <!-- Setup Panel -->
+    <!-- 設定畫面 -->
     <div id="setup">
       <div class="section-title">設定訓練參數</div>
-
       <div class="input-group">
-        <div class="input-label">
-          <span class="emoji">🚶</span>
-          <span>快走時間 <span class="unit">（分鐘）</span></span>
-        </div>
+        <div class="input-label"><span>🚶</span><span>快走時間 <span class="unit">（分鐘）</span></span></div>
         <div class="number-control">
-          <button class="num-btn" onclick="adjustValue('walk-min', -0.5)">−</button>
+          <button class="num-btn" onclick="adjustValue('walk-min',-0.5)">−</button>
           <input class="num-input" type="number" id="walk-min" value="1" step="0.5" min="0.5" oninput="calcTotal()">
           <button class="num-btn" onclick="adjustValue('walk-min', 0.5)">+</button>
         </div>
       </div>
-
       <div class="input-group">
-        <div class="input-label">
-          <span class="emoji">🏃</span>
-          <span>慢跑時間 <span class="unit">（分鐘）</span></span>
-        </div>
+        <div class="input-label"><span>🏃</span><span>慢跑時間 <span class="unit">（分鐘）</span></span></div>
         <div class="number-control">
-          <button class="num-btn" onclick="adjustValue('jog-min', -0.5)">−</button>
+          <button class="num-btn" onclick="adjustValue('jog-min',-0.5)">−</button>
           <input class="num-input" type="number" id="jog-min" value="1" step="0.5" min="0.5" oninput="calcTotal()">
           <button class="num-btn" onclick="adjustValue('jog-min', 0.5)">+</button>
         </div>
       </div>
-
       <div class="input-group">
-        <div class="input-label">
-          <span class="emoji">🔁</span>
-          <span>訓練組數 <span class="unit">（組）</span></span>
-        </div>
+        <div class="input-label"><span>🔁</span><span>訓練組數 <span class="unit">（組）</span></span></div>
         <div class="number-control">
-          <button class="num-btn" onclick="adjustValue('sets', -1)">−</button>
+          <button class="num-btn" onclick="adjustValue('sets',-1)">−</button>
           <input class="num-input" type="number" id="sets" value="5" step="1" min="1" oninput="calcTotal()">
           <button class="num-btn" onclick="adjustValue('sets', 1)">+</button>
         </div>
       </div>
-
       <div class="total-preview">
         <span class="label">⏱ 預估總時間</span>
-        <span class="value" id="est-total">9.0 分鐘</span>
+        <span class="value" id="est-total">10.0 分鐘</span>
       </div>
-
       <button class="btn-start" onclick="startWorkout()">🚀 開始訓練！</button>
-
-      <!-- History Section (visible in setup) -->
       <div class="history-section">
         <div class="history-header">
           <span class="history-title">📋 運動紀錄</span>
           <div class="history-actions">
             <button class="btn-small" onclick="downloadCSV()">📥 CSV</button>
-            <button class="btn-small" onclick="clearAll()" style="border-color:rgba(239,68,68,0.3);color:rgba(239,68,68,0.6)">🗑 清空</button>
+            <button class="btn-small" onclick="clearAll()" style="border-color:rgba(239,68,68,.3);color:rgba(239,68,68,.6)">🗑 清空</button>
           </div>
         </div>
         <table class="history-table">
-          <thead>
-            <tr>
-              <th>日期時間</th>
-              <th>設定</th>
-              <th>時間(分)</th>
-              <th></th>
-            </tr>
-          </thead>
+          <thead><tr><th>日期時間</th><th>設定</th><th>時間(分)</th><th></th></tr></thead>
           <tbody id="history-body"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Workout Panel -->
+    <!-- 訓練畫面 -->
     <div id="workout-area">
-
-      <!-- Completion screen -->
       <div id="completion-screen" style="display:none">
         <div class="celebration">
           <span class="trophy">🏆</span>
@@ -578,34 +202,22 @@
         </div>
         <button class="btn-finish" onclick="resetToSetup()">💪 再來一次！</button>
       </div>
-
-      <!-- Active workout -->
       <div id="active-workout">
-        <!-- Phase progress bar -->
         <div class="phase-bar" id="phase-bar"></div>
-
-        <!-- Set info -->
         <div class="set-info" id="set-info">第 1 組 / 共 5 組</div>
-
-        <!-- Status badge -->
         <div class="status-row">
           <span class="status-badge badge-walk" id="status-badge">🚶 快走階段</span>
         </div>
-
-        <!-- Circular timer -->
         <div class="timer-container">
           <svg class="timer-svg" viewBox="0 0 220 220">
             <circle class="timer-track" cx="110" cy="110" r="100"/>
-            <circle class="timer-progress" id="timer-arc" cx="110" cy="110" r="100"
-              stroke="url(#walkGrad)"/>
+            <circle class="timer-progress" id="timer-arc" cx="110" cy="110" r="100" stroke="url(#walkGrad)"/>
             <defs>
               <linearGradient id="walkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#f7971e"/>
-                <stop offset="100%" style="stop-color:#ffd200"/>
+                <stop offset="0%" style="stop-color:#f7971e"/><stop offset="100%" style="stop-color:#ffd200"/>
               </linearGradient>
               <linearGradient id="jogGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#11998e"/>
-                <stop offset="100%" style="stop-color:#38ef7d"/>
+                <stop offset="0%" style="stop-color:#11998e"/><stop offset="100%" style="stop-color:#38ef7d"/>
               </linearGradient>
             </defs>
           </svg>
@@ -614,241 +226,185 @@
             <div class="timer-label">剩餘時間</div>
           </div>
         </div>
-
-        <!-- Motivation message -->
         <div class="motivation" id="motivation-msg">準備好了嗎？加油！</div>
-
-        <!-- Control buttons -->
         <div class="control-btns">
           <button class="btn-control btn-pause-resume" id="pause-btn" onclick="togglePause()">⏸ 暫停</button>
           <button class="btn-control btn-stop" onclick="confirmStop()">⏹ 結束</button>
         </div>
       </div>
-
     </div>
+
   </div>
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────────
-let timer = null;
-let isWalkPhase = true;
-let isPaused = false;
-let currentSet = 1;
-let totalSets = 0;
-let walkSec = 0;
-let jogSec = 0;
-let timeLeft = 0;
+// ── 狀態 ──────────────────────────────────────────────────────────────────────
+let timer        = null;
+let isWalkPhase  = true;
+let isPaused     = false;
+let currentSet   = 1;
+let totalSets    = 0;
+let walkSec      = 0;
+let jogSec       = 0;
+let timeLeft     = 0;
 let phaseTotalSec = 0;
-let audioCtx = null;
-let wakeLock = null;
+let audioCtx     = null;
+let wakeLock     = null;
 
-// ── Motivation Messages ────────────────────────────────────────────────────────
-const WALK_MSGS = [
-  "放輕鬆，調整呼吸！",
-  "享受快走的節奏 🎵",
-  "棒棒的！保持步伐！",
-  "這段路程你最穩！",
-  "快走也是很棒的鍛鍊！",
-  "呼吸，放鬆，前進！",
-];
-const JOG_MSGS = [
-  "衝啊！雁君超強的！💪",
-  "跑起來！你做得到！🔥",
-  "加速！感受力量！⚡",
-  "燃燒吧！你是最棒的！",
-  "全力以赴！GO GO GO！",
-  "雁君加油！超越自己！🚀",
-];
-const COUNTDOWN_MSGS = [
-  "倒數計時！準備切換！",
-  "快到了！撐住！",
-  "差一點了！繼續！",
-  "最後幾秒，衝衝衝！",
-  "快換了！準備好！",
-];
+// ── 絕對時間追蹤（解決切換 App / 螢幕關掉後計時跑掉的問題）──────────────────
+let workoutStartTime = null;  // Date.now() 訓練開始的時間戳記
+let totalPausedMs    = 0;     // 累計暫停毫秒數
+let pauseStartTime   = null;  // 最近一次暫停的時間戳記
+let schedule         = [];    // [{phase, set, startMs, endMs}]
+let totalWorkoutMs   = 0;
+let lastTickPhase    = 'walk';
+let lastTickSet      = 1;
 
-// ── Background Particles ────────────────────────────────────────────────────────
+// ── 激勵語句 ──────────────────────────────────────────────────────────────────
+const WALK_MSGS = ['放輕鬆，調整呼吸！','享受快走的節奏 🎵','棒棒的！保持步伐！','這段路程你最穩！','快走也是很棒的鍛鍊！','呼吸，放鬆，前進！'];
+const JOG_MSGS  = ['衝啊！雁君超強的！💪','跑起來！你做得到！🔥','加速！感受力量！⚡','燃燒吧！你是最棒的！','全力以赴！GO GO GO！','雁君加油！超越自己！🚀'];
+
+// ── 背景粒子 ──────────────────────────────────────────────────────────────────
 function initParticles() {
-  const container = document.getElementById('bg-particles');
+  const c = document.getElementById('bg-particles');
   const colors = ['#667eea','#764ba2','#f7971e','#11998e','#f093fb'];
   for (let i = 0; i < 18; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
     const size = 20 + Math.random() * 60;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}%;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      animation-duration:${8+Math.random()*12}s;
-      animation-delay:${Math.random()*8}s;
-    `;
-    container.appendChild(p);
+    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*8}s;`;
+    c.appendChild(p);
   }
 }
 
-// ── Number Controls ─────────────────────────────────────────────────────────────
+// ── 數字控制 ──────────────────────────────────────────────────────────────────
 function adjustValue(id, delta) {
   const el = document.getElementById(id);
   let val = parseFloat(el.value) || 0;
   val = Math.round((val + delta) * 10) / 10;
-  if (id === 'sets') {
-    val = Math.max(1, Math.round(val));
-  } else {
-    val = Math.max(0.5, val);
-  }
-  el.value = val;
+  el.value = (id === 'sets') ? Math.max(1, Math.round(val)) : Math.max(0.5, val);
   calcTotal();
 }
-
 function calcTotal() {
   const w = parseFloat(document.getElementById('walk-min').value) || 0;
   const j = parseFloat(document.getElementById('jog-min').value) || 0;
   const s = parseInt(document.getElementById('sets').value) || 0;
-  // Each set = walk + jog (including the last set's jog)
-  const total = s > 0 ? (w + j) * s : 0;
-  document.getElementById('est-total').textContent = total.toFixed(1) + ' 分鐘';
+  document.getElementById('est-total').textContent = (s > 0 ? (w + j) * s : 0).toFixed(1) + ' 分鐘';
 }
 
-// ── Audio ──────────────────────────────────────────────────────────────────────
+// ── 音效 ──────────────────────────────────────────────────────────────────────
 function initAudio() {
   if (!audioCtx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AC();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  // Unlock with a silent oscillator
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  g.gain.value = 0;
-  osc.connect(g); g.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.001);
+  // 解鎖 AudioContext（iOS 需要在使用者手勢觸發後播放一次靜音）
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  g.gain.value = 0; o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.001);
 }
-
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
 function playTone(freq, type, dur, vol = 0.6) {
+  resumeAudio();
   if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, audioCtx.currentTime);
   g.gain.setValueAtTime(vol, audioCtx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-  osc.connect(g); g.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
 }
+function playWalkStart()    { playTone(523,'sine',0.18,0.5); setTimeout(()=>playTone(659,'sine',0.25,0.5),180); }
+function playJogStart()     { playTone(440,'square',0.12,0.4); setTimeout(()=>playTone(554,'square',0.12,0.4),120); setTimeout(()=>playTone(659,'square',0.2,0.4),240); }
+function playCountdownBeep(){ playTone(880,'sine',0.1,0.3); }
+function playWarningBeep()  { playTone(1100,'sine',0.08,0.5); setTimeout(()=>playTone(1100,'sine',0.08,0.5),100); }
+function playFinishFanfare(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.4,0.6),i*160)); }
 
-// Friendly beep sequences
-function playWalkStart() {
-  // Light, cheerful two-tone
-  playTone(523, 'sine', 0.18, 0.5);
-  setTimeout(() => playTone(659, 'sine', 0.25, 0.5), 180);
-}
-function playJogStart() {
-  // Energetic three-tone burst
-  playTone(440, 'square', 0.12, 0.4);
-  setTimeout(() => playTone(554, 'square', 0.12, 0.4), 120);
-  setTimeout(() => playTone(659, 'square', 0.2, 0.4), 240);
-}
-function playCountdownBeep() {
-  // Soft tick
-  playTone(880, 'sine', 0.1, 0.3);
-}
-function playFinishFanfare() {
-  // Victory melody
-  const notes = [523, 659, 784, 1047];
-  notes.forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.4, 0.6), i * 160));
-}
-function playWarningBeep() {
-  // Double beep for countdown < 5
-  playTone(1100, 'sine', 0.08, 0.5);
-  setTimeout(() => playTone(1100, 'sine', 0.08, 0.5), 100);
-}
-
-// ── Speech ─────────────────────────────────────────────────────────────────────
-// Cache selected female voice after first pick
+// ── 語音（優先選女聲）────────────────────────────────────────────────────────
 let _femaleVoice = null;
-
 function pickFemaleVoice() {
   if (_femaleVoice) return _femaleVoice;
-
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
-
-  // Priority list: real TTS female voices, best first
-  // macOS: Mei-Jia (zh-TW) / Ting-Ting (zh-CN)
-  // iOS/Safari: 美佳 / 婷婷
-  // Windows: Microsoft Hanhan / Yaoyao / HiuMaan / Zhiwei
-  // Google: Google 普通話 (female by default)
-  const FEMALE_KEYWORDS = [
-    'mei-jia', 'meijia', '美佳',
-    'ting-ting', 'tingting', '婷婷',
-    'hiumaan', 'hiu maan',
-    'xiaochen', 'xiao chen', '曉臻', '曉辰',
-    'zhiwei', 'zhi wei',
-    'yaoyao', 'yao yao',
-    'hanhan', 'han han',
-    'linlin', 'lin lin',
-    'google 普通話', 'google zh',
-  ];
-  const MALE_KEYWORDS = [
-    'kangkang', 'kang kang', 'liang', 'danny', 'yu',
-    'male', 'man', '男',
-  ];
-
-  // Score each zh voice: female keyword → high score, male keyword → negative
+  const FEMALE = ['mei-jia','meijia','美佳','ting-ting','tingting','婷婷','hiumaan','hiu maan','xiaochen','曉臻','曉辰','zhiwei','yaoyao','hanhan','linlin','google 普通話'];
+  const MALE   = ['kangkang','kang kang','liang','danny','male','man','男'];
   let best = null, bestScore = -Infinity;
   for (const v of voices) {
-    const isZh = /zh|cmn|yue/i.test(v.lang);
-    if (!isZh) continue;
-    const nameLower = v.name.toLowerCase();
+    if (!/zh|cmn|yue/i.test(v.lang)) continue;
+    const n = v.name.toLowerCase();
     let score = 0;
-    for (const kw of FEMALE_KEYWORDS) if (nameLower.includes(kw)) score += 10;
-    for (const kw of MALE_KEYWORDS)   if (nameLower.includes(kw)) score -= 20;
+    FEMALE.forEach(k => { if (n.includes(k)) score += 10; });
+    MALE.forEach(k   => { if (n.includes(k)) score -= 20; });
     if (score > bestScore) { bestScore = score; best = v; }
   }
-  _femaleVoice = best;
-  return best;
+  return (_femaleVoice = best);
 }
-
 function speak(text, rate = 1.05, pitch = 1.25) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'zh-TW';
-  utter.rate = rate;    // slightly faster = more energetic
-  utter.pitch = pitch;  // higher = brighter female tone
-  utter.volume = 1;
-
-  const voice = pickFemaleVoice();
-  if (voice) utter.voice = voice;
-
-  window.speechSynthesis.speak(utter);
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; u.rate = rate; u.pitch = pitch; u.volume = 1;
+  const v = pickFemaleVoice();
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
 }
 
-// ── Wake Lock ──────────────────────────────────────────────────────────────────
+// ── Wake Lock（防止螢幕自動關閉）─────────────────────────────────────────────
 async function requestWakeLock() {
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch {}
   }
 }
 function releaseWakeLock() {
-  if (wakeLock) { wakeLock.release().then(() => wakeLock = null); }
+  if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
 }
 
-// ── Workout Control ────────────────────────────────────────────────────────────
+// ── 訓練排程（絕對時間軸）───────────────────────────────────────────────────
+// 每組 = 快走 + 慢跑，共 totalSets 組
+function buildSchedule() {
+  schedule = [];
+  let t = 0;
+  for (let s = 1; s <= totalSets; s++) {
+    schedule.push({ phase: 'walk', set: s, startMs: t, endMs: t + walkSec * 1000 });
+    t += walkSec * 1000;
+    schedule.push({ phase: 'jog',  set: s, startMs: t, endMs: t + jogSec  * 1000 });
+    t += jogSec * 1000;
+  }
+  totalWorkoutMs = t;
+}
+
+// 取得訓練已進行的毫秒數（扣除暫停時間）
+function getElapsedMs() {
+  if (workoutStartTime === null) return 0;
+  let e = Date.now() - workoutStartTime - totalPausedMs;
+  if (isPaused && pauseStartTime) e -= (Date.now() - pauseStartTime);
+  return Math.max(0, e);
+}
+
+// 根據已進行時間，取得目前應在哪個 phase
+function getStateAt(elapsedMs) {
+  for (const seg of schedule) {
+    if (elapsedMs >= seg.startMs && elapsedMs < seg.endMs) {
+      return { ...seg, timeLeft: Math.max(1, Math.ceil((seg.endMs - elapsedMs) / 1000)) };
+    }
+  }
+  return null; // 全部完成
+}
+
+// ── 訓練流程 ──────────────────────────────────────────────────────────────────
 function startWorkout() {
   const w = parseFloat(document.getElementById('walk-min').value);
   const j = parseFloat(document.getElementById('jog-min').value);
   totalSets = parseInt(document.getElementById('sets').value);
-
-  if (isNaN(w) || isNaN(j) || isNaN(totalSets) || w <= 0 || j <= 0 || totalSets <= 0) {
-    speak('請先設定有效的訓練參數喔！', 1.05, 1.25);
-    return;
+  if (!w || !j || !totalSets || w <= 0 || j <= 0 || totalSets <= 0) {
+    speak('請先設定有效的訓練參數喔！', 1.05, 1.25); return;
   }
-
   walkSec = Math.round(w * 60);
-  jogSec = Math.round(j * 60);
+  jogSec  = Math.round(j * 60);
 
   initAudio();
   requestWakeLock();
@@ -858,117 +414,107 @@ function startWorkout() {
   document.getElementById('active-workout').style.display = 'block';
   document.getElementById('completion-screen').style.display = 'none';
 
-  currentSet = 1;
-  isWalkPhase = true;
-  isPaused = false;
-  timeLeft = walkSec;
-  phaseTotalSec = walkSec;
+  buildSchedule();
+  workoutStartTime = Date.now();
+  totalPausedMs    = 0;
+  pauseStartTime   = null;
+  currentSet       = 1;
+  isWalkPhase      = true;
+  isPaused         = false;
+  timeLeft         = walkSec;
+  phaseTotalSec    = walkSec;
+  lastTickPhase    = 'walk';
+  lastTickSet      = 1;
 
   buildPhaseBar();
   updateUI();
   resetPauseBtn();
 
-  setTimeout(() => {
-    speak('好！訓練開始囉！雁君，來吧！加油！', 1.08, 1.3);
-    playWalkStart();
-  }, 400);
-
+  setTimeout(() => { speak('好！訓練開始囉！雁君，來吧！加油！', 1.08, 1.3); playWalkStart(); }, 400);
   clearInterval(timer);
-  timer = setInterval(countdown, 1000);
+  timer = setInterval(countdown, 500); // 500ms 輪詢，讓時間更準確
 }
 
 function togglePause() {
   isPaused = !isPaused;
   const btn = document.getElementById('pause-btn');
   if (isPaused) {
-    btn.textContent = '▶ 繼續';
-    btn.classList.add('is-paused');
+    pauseStartTime = Date.now();
+    clearInterval(timer);
+    btn.textContent = '▶ 繼續'; btn.classList.add('is-paused');
     speak('已暫停，喘口氣，等你回來！', 1.0, 1.2);
   } else {
-    btn.textContent = '⏸ 暫停';
-    btn.classList.remove('is-paused');
+    totalPausedMs += Date.now() - pauseStartTime;
+    pauseStartTime = null;
+    clearInterval(timer);
+    timer = setInterval(countdown, 500);
+    btn.textContent = '⏸ 暫停'; btn.classList.remove('is-paused');
     speak('繼續！雁君最棒了！衝衝衝！', 1.1, 1.3);
   }
 }
-
 function resetPauseBtn() {
   const btn = document.getElementById('pause-btn');
-  btn.textContent = '⏸ 暫停';
-  btn.classList.remove('is-paused');
+  btn.textContent = '⏸ 暫停'; btn.classList.remove('is-paused');
 }
-
 function confirmStop() {
-  if (confirm('確定要結束這次訓練嗎？')) {
-    finishWorkout(false);
-  }
+  if (confirm('確定要結束這次訓練嗎？')) finishWorkout(false);
 }
 
+// ── 主計時迴圈（以絕對時間計算，不怕被節流）─────────────────────────────────
 function countdown() {
   if (isPaused) return;
-  timeLeft--;
 
-  // Countdown warning sounds
-  if (timeLeft <= 3 && timeLeft > 0) {
-    playWarningBeep();
-  } else if (timeLeft <= 8 && timeLeft > 3) {
-    playCountdownBeep();
+  const elapsedMs = getElapsedMs();
+
+  if (elapsedMs >= totalWorkoutMs) {
+    clearInterval(timer); finishWorkout(true); return;
   }
 
-  // Countdown speech
-  if (timeLeft === 5) {
-    speak('準備切換！五、四、三、二、一！', 1.12, 1.3);
-  }
+  const state = getStateAt(elapsedMs);
+  if (!state) { clearInterval(timer); finishWorkout(true); return; }
 
-  updateTimerArc();
-  updateTimerDisplay();
+  const newTimeLeft   = state.timeLeft;
+  const phaseChanged  = state.phase !== lastTickPhase || state.set !== lastTickSet;
 
-  if (timeLeft <= 0) {
-    handlePhaseEnd();
-  }
-}
-
-function handlePhaseEnd() {
-  if (isWalkPhase) {
-    // Walk done → always switch to jog (every set has walk + jog)
-    markPhaseComplete(currentSet - 1, 'walk');
-    isWalkPhase = false;
-    timeLeft = jogSec;
-    phaseTotalSec = jogSec;
-    updateUI();
-    playJogStart();
-    setTimeout(() => speak(`第${currentSet}組慢跑開始！衝啊！加速！你超強的！`, 1.1, 1.32), 300);
-  } else {
-    // Jog done → this set is complete
-    markPhaseComplete(currentSet - 1, 'jog');
-    if (currentSet >= totalSets) {
-      // All sets done!
-      finishWorkout(true);
-      return;
+  if (phaseChanged) {
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+    isWalkPhase   = state.phase === 'walk';
+    currentSet    = state.set;
+    phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+    if (isWalkPhase) {
+      playWalkStart();
+      setTimeout(() => speak(`太棒了！第${currentSet}組，快走，調整呼吸！你做到了！`, 1.05, 1.25), 300);
+    } else {
+      playJogStart();
+      setTimeout(() => speak(`第${currentSet}組慢跑開始！衝啊！加速！你超強的！`, 1.1, 1.32), 300);
     }
-    // Move to next set, start walk
-    currentSet++;
-    isWalkPhase = true;
-    timeLeft = walkSec;
-    phaseTotalSec = walkSec;
     updateUI();
-    playWalkStart();
-    setTimeout(() => speak(`太棒了！第${currentSet}組，快走，調整呼吸！你做到了！`, 1.05, 1.25), 300);
+  }
+
+  // 只在實際剩餘秒數改變時才更新顯示（避免 500ms 觸發兩次）
+  if (newTimeLeft !== timeLeft) {
+    timeLeft = newTimeLeft;
+    if (!phaseChanged) {
+      if      (timeLeft <= 3 && timeLeft > 0) playWarningBeep();
+      else if (timeLeft <= 8 && timeLeft > 3) playCountdownBeep();
+      if (timeLeft === 5) speak('準備切換！五、四、三、二、一！', 1.12, 1.3);
+    }
+    updateTimerDisplay();
+    updateTimerArc();
   }
 }
 
 function finishWorkout(completed) {
   clearInterval(timer);
   releaseWakeLock();
-
+  workoutStartTime = null;
   if (completed) {
     saveRecord();
     launchConfetti();
     playFinishFanfare();
-    setTimeout(() => {
-      speak('恭喜恭喜！訓練完成！雁君，你今天真的非常非常棒！為自己鼓鼓掌！下次繼續努力，你是最厲害的！', 0.95, 1.28);
-    }, 600);
+    setTimeout(() => speak('恭喜恭喜！訓練完成！雁君，你今天真的非常非常棒！為自己鼓鼓掌！下次繼續努力，你是最厲害的！', 0.95, 1.28), 600);
   }
-
   document.getElementById('active-workout').style.display = 'none';
   document.getElementById('completion-screen').style.display = 'block';
 }
@@ -979,206 +525,180 @@ function resetToSetup() {
   updateHistoryTable();
 }
 
-// ── UI Updates ─────────────────────────────────────────────────────────────────
-function updateUI() {
-  updateTimerDisplay();
-  updateTimerArc();
-  updateStatusBadge();
-  updateSetInfo();
-  updateMotivation();
-  updatePhaseBar();
-}
+// ── 切換 App / 螢幕關掉後回來：自動同步 ────────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
 
+  // 重新申請 Wake Lock（螢幕亮起時可能已被釋放）
+  if (workoutStartTime !== null && !wakeLock) requestWakeLock();
+
+  // 訓練未進行或已暫停，不需處理
+  if (workoutStartTime === null || isPaused) return;
+
+  // 1. 恢復 AudioContext（瀏覽器在背景會暫停它）
+  resumeAudio();
+
+  // 2. 計算現在應在哪個位置
+  const elapsedMs = getElapsedMs();
+  if (elapsedMs >= totalWorkoutMs) { finishWorkout(true); return; }
+
+  const state = getStateAt(elapsedMs);
+  if (!state) { finishWorkout(true); return; }
+
+  const prevPhase = lastTickPhase;
+  const prevSet   = lastTickSet;
+
+  isWalkPhase   = state.phase === 'walk';
+  currentSet    = state.set;
+  timeLeft      = state.timeLeft;
+  phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+
+  if (state.phase !== prevPhase || state.set !== prevSet) {
+    // 背景期間跨過了一個或多個 phase，更新畫面並告知
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+    updateUI();
+    const label = isWalkPhase ? `第${currentSet}組快走` : `第${currentSet}組慢跑`;
+    speak(`歡迎回來！現在是${label}，剩 ${timeLeft} 秒，繼續加油！`, 1.05, 1.25);
+  } else {
+    // 同一個 phase，只更新顯示
+    updateTimerDisplay();
+    updateTimerArc();
+    speak('歡迎回來！繼續！雁君加油！', 1.05, 1.25);
+  }
+
+  // 3. 重啟計時迴圈（原本可能已被瀏覽器節流或暫停）
+  clearInterval(timer);
+  timer = setInterval(countdown, 500);
+});
+
+// ── UI 更新 ───────────────────────────────────────────────────────────────────
+function updateUI() {
+  updateTimerDisplay(); updateTimerArc(); updateStatusBadge();
+  updateSetInfo(); updateMotivation(); updatePhaseBar();
+}
 function updateTimerDisplay() {
-  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const s = (timeLeft % 60).toString().padStart(2, '0');
+  const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+  const s = (timeLeft % 60).toString().padStart(2,'0');
   const el = document.getElementById('timer-display');
   el.textContent = `${m}:${s}`;
-
-  // Heartbeat animation when < 6s
-  if (timeLeft <= 5 && timeLeft > 0) {
-    el.classList.remove('heartbeat');
-    void el.offsetWidth;
-    el.classList.add('heartbeat');
-  }
+  if (timeLeft <= 5 && timeLeft > 0) { el.classList.remove('heartbeat'); void el.offsetWidth; el.classList.add('heartbeat'); }
 }
-
 function updateTimerArc() {
   const arc = document.getElementById('timer-arc');
-  const circumference = 628; // 2 * pi * 100
-  const fraction = phaseTotalSec > 0 ? timeLeft / phaseTotalSec : 0;
-  arc.style.strokeDashoffset = circumference * (1 - fraction);
+  const frac = phaseTotalSec > 0 ? timeLeft / phaseTotalSec : 0;
+  arc.style.strokeDashoffset = 628 * (1 - frac);
   arc.setAttribute('stroke', isWalkPhase ? 'url(#walkGrad)' : 'url(#jogGrad)');
 }
-
 function updateStatusBadge() {
-  const badge = document.getElementById('status-badge');
-  badge.className = 'status-badge ' + (isWalkPhase ? 'badge-walk' : 'badge-jog');
-  badge.textContent = isWalkPhase ? '🚶 快走階段' : '🏃 慢跑階段';
+  const b = document.getElementById('status-badge');
+  b.className = 'status-badge ' + (isWalkPhase ? 'badge-walk' : 'badge-jog');
+  b.textContent = isWalkPhase ? '🚶 快走階段' : '🏃 慢跑階段';
 }
-
 function updateSetInfo() {
   document.getElementById('set-info').textContent = `第 ${currentSet} 組 ／ 共 ${totalSets} 組`;
 }
-
 function updateMotivation() {
   const msgs = isWalkPhase ? WALK_MSGS : JOG_MSGS;
-  const msg = msgs[Math.floor(Math.random() * msgs.length)];
   const el = document.getElementById('motivation-msg');
   el.style.opacity = '0';
-  setTimeout(() => { el.textContent = msg; el.style.opacity = '1'; }, 200);
+  setTimeout(() => { el.textContent = msgs[Math.floor(Math.random()*msgs.length)]; el.style.opacity = '1'; }, 200);
 }
 
-// ── Phase Bar ──────────────────────────────────────────────────────────────────
+// ── Phase Bar ─────────────────────────────────────────────────────────────────
 function buildPhaseBar() {
   const bar = document.getElementById('phase-bar');
   bar.innerHTML = '';
-  // Each set = walk + jog → totalSets * 2 segments
-  // Pattern: walk1, jog1, walk2, jog2, ..., walkN, jogN
-  const totalSegments = totalSets * 2;
-  for (let i = 0; i < totalSegments; i++) {
+  for (let i = 0; i < totalSets * 2; i++) {
     const seg = document.createElement('div');
-    seg.className = 'phase-seg';
-    seg.id = `seg-${i}`;
+    seg.className = 'phase-seg'; seg.id = `seg-${i}`;
     bar.appendChild(seg);
   }
   updatePhaseBar();
 }
-
 function updatePhaseBar() {
-  const totalSegments = totalSets * 2;
-  // seg index: even = walk, odd = jog
-  // set number for seg i = Math.floor(i / 2) + 1
-  for (let i = 0; i < totalSegments; i++) {
+  for (let i = 0; i < totalSets * 2; i++) {
     const seg = document.getElementById(`seg-${i}`);
     if (!seg) continue;
     const isWalkSeg = i % 2 === 0;
-    const setNum = Math.floor(i / 2) + 1;
-
-    let isDone = false;
-    let isActive = false;
-
+    const setNum    = Math.floor(i / 2) + 1;
+    let isDone = false, isActive = false;
     if (setNum < currentSet) {
       isDone = true;
     } else if (setNum === currentSet) {
-      if (isWalkSeg) {
-        if (isWalkPhase) isActive = true;
-        else isDone = true; // walk finished, now jogging
-      } else {
-        if (!isWalkPhase) isActive = true;
-        // if still in walk phase, jog seg stays grey
-      }
+      if (isWalkSeg) { if (isWalkPhase) isActive = true; else isDone = true; }
+      else           { if (!isWalkPhase) isActive = true; }
     }
-
     seg.className = 'phase-seg';
     if (isActive) seg.classList.add('active');
     else if (isDone) seg.classList.add(isWalkSeg ? 'walk-done' : 'jog-done');
   }
 }
 
-function markPhaseComplete(setIdx, type) {
-  // Called when a phase ends
-  updatePhaseBar();
-}
-
-// ── Confetti ───────────────────────────────────────────────────────────────────
+// ── 彩色紙屑 ─────────────────────────────────────────────────────────────────
 function launchConfetti() {
   const colors = ['#ffd200','#f7971e','#11998e','#38ef7d','#f093fb','#667eea','#fff'];
   for (let i = 0; i < 60; i++) {
     setTimeout(() => {
-      const piece = document.createElement('div');
-      piece.className = 'confetti-piece';
-      piece.style.cssText = `
-        left:${Math.random()*100}vw;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        width:${6+Math.random()*10}px;
-        height:${6+Math.random()*10}px;
-        border-radius:${Math.random()>0.5?'50%':'2px'};
-        animation-duration:${2+Math.random()*2}s;
-        animation-delay:${Math.random()*0.5}s;
-      `;
-      document.body.appendChild(piece);
-      setTimeout(() => piece.remove(), 3000);
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*10}px;height:${6+Math.random()*10}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.5}s;`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 3000);
     }, i * 30);
   }
 }
 
-// ── History ─────────────────────────────────────────────────────────────────────
+// ── 運動紀錄 ─────────────────────────────────────────────────────────────────
 function saveRecord() {
   const totalMin = (((walkSec + jogSec) * totalSets) / 60).toFixed(1);
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
+  const now = new Date(), pad = n => String(n).padStart(2,'0');
   const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const wMin = document.getElementById('walk-min').value;
   const jMin = document.getElementById('jog-min').value;
-  const record = { date: dateStr, setting: `快${wMin}/慢${jMin}/${totalSets}組`, total: totalMin };
   const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-  history.push(record);
+  history.push({ date: dateStr, setting: `快${wMin}/慢${jMin}/${totalSets}組`, total: totalMin });
   localStorage.setItem('workoutHistory', JSON.stringify(history));
 }
-
 function updateHistoryTable() {
   const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
   const tbody = document.getElementById('history-body');
   tbody.innerHTML = '';
-  if (history.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="color:rgba(255,255,255,0.25);text-align:center;padding:12px">還沒有紀錄，快去訓練！💪</td></tr>';
-    return;
-  }
+  if (!history.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:rgba(255,255,255,.25);text-align:center;padding:12px">還沒有紀錄，快去訓練！💪</td></tr>'; return; }
   for (let i = history.length - 1; i >= 0; i--) {
-    const r = history[i];
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.date}</td>
-      <td>${r.setting}</td>
-      <td style="text-align:center">${r.total}</td>
-      <td><button class="btn-del" onclick="deleteRecord(${i})">✕</button></td>
-    `;
+    const r = history[i], tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.date}</td><td>${r.setting}</td><td style="text-align:center">${r.total}</td><td><button class="btn-del" onclick="deleteRecord(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   }
 }
-
 function deleteRecord(i) {
   if (!confirm('確定刪除這筆紀錄？')) return;
-  const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-  history.splice(i, 1);
-  localStorage.setItem('workoutHistory', JSON.stringify(history));
-  updateHistoryTable();
+  const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  h.splice(i, 1); localStorage.setItem('workoutHistory', JSON.stringify(h)); updateHistoryTable();
 }
-
 function clearAll() {
   const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-  if (h.length === 0) { alert('目前沒有紀錄！'); return; }
-  if (confirm('確定清空所有運動紀錄？')) {
-    localStorage.removeItem('workoutHistory');
-    updateHistoryTable();
-  }
+  if (!h.length) { alert('目前沒有紀錄！'); return; }
+  if (confirm('確定清空所有運動紀錄？')) { localStorage.removeItem('workoutHistory'); updateHistoryTable(); }
 }
-
 function downloadCSV() {
-  const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-  if (history.length === 0) { alert('沒有紀錄可下載！'); return; }
+  const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  if (!h.length) { alert('沒有紀錄可下載！'); return; }
   let csv = '\uFEFF日期,設定,總時間(分)\n';
-  history.forEach(r => { csv += `${r.date},${r.setting},${r.total}\n`; });
+  h.forEach(r => { csv += `${r.date},${r.setting},${r.total}\n`; });
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'workout_log.csv';
-  a.click();
+  a.download = 'workout_log.csv'; a.click();
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-window.onload = function () {
+// ── 初始化 ────────────────────────────────────────────────────────────────────
+window.onload = () => {
   initParticles();
   calcTotal();
   updateHistoryTable();
-
-  // Pre-load & cache voices; reset cached voice whenever list refreshes
   if (window.speechSynthesis) {
     window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => {
-      _femaleVoice = null;   // force re-pick with fresh list
-      pickFemaleVoice();     // warm up the cache
-    };
+    window.speechSynthesis.onvoiceschanged = () => { _femaleVoice = null; pickFemaleVoice(); };
   }
 };
 </script>
