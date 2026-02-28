@@ -7,7 +7,7 @@
 
   <!-- PWA：開機自動啟動 & 持續運作 -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#667eea">
+  <meta name="theme-color" content="#c06080">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,162 +15,219 @@
   <link rel="apple-touch-icon" href="icon.svg">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+    /* ── 常玉《荷》色盤 ──────────────────────────────────────────────── */
     :root {
-      --walk-from: #f7971e; --walk-to: #ffd200;
-      --jog-from: #11998e;  --jog-to: #38ef7d;
+      --ink:        #1e120a;   /* 濃墨 */
+      --ink-mid:    #4a3018;   /* 中墨 */
+      --ink-soft:   #7a5530;   /* 淡墨 */
+      --paper:      #f2e6ce;   /* 宣紙 */
+      --lotus-deep: #c06080;   /* 深荷粉 */
+      --lotus-pink: #e090b0;   /* 荷粉 */
+      --lotus-bud:  #d080a0;   /* 含苞 */
+      --leaf-dark:  #163220;   /* 葉墨 */
+      --leaf-mid:   #265a3a;   /* 葉綠 */
+      --walk-from:  #c87010;
+      --walk-to:    #e8a820;
+      --jog-from:   #1a7a50;
+      --jog-to:     #38c870;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: linear-gradient(150deg, #f5edd5 0%, #ede2c2 45%, #f0e8d2 100%);
       display: flex; align-items: center; justify-content: center;
       padding: 20px; overflow-x: hidden;
     }
-    .bg-particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .particle { position: absolute; border-radius: 50%; opacity: 0.15; animation: float linear infinite; }
-    @keyframes float {
-      0%   { transform: translateY(100vh) rotate(0deg);   opacity: 0; }
-      10%  { opacity: 0.15; }
-      90%  { opacity: 0.15; }
-      100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+
+    /* 原本的粒子動畫在新主題中隱藏 */
+    .bg-particles { display: none; }
+    .particle     { display: none; }
+
+    /* ── 常玉荷花 SVG 畫作背景 ────────────────────────────────────────── */
+    #lotus-bg {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
     }
+
     .app { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
     .header { text-align: center; margin-bottom: 24px; animation: slideDown .6s ease; }
-    @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .header h1 { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,255,255,.3); }
-    .header .subtitle { font-size: .85rem; color: rgba(255,255,255,.5); margin-top: 4px; letter-spacing: 1px; }
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .header h1 {
+      font-size: 1.8rem; font-weight: 900; color: var(--ink);
+      letter-spacing: 2px; text-shadow: 1px 2px 8px rgba(120,70,30,.18);
+    }
+    .header .subtitle { font-size: .85rem; color: var(--ink-soft); margin-top: 4px; letter-spacing: 1px; }
+
+    /* 宣紙質感卡片 */
     .card {
-      background: rgba(255,255,255,.07); backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.12); border-radius: 28px;
-      padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      background: rgba(242,230,206,.90); backdrop-filter: blur(18px);
+      border: 1px solid rgba(120,75,35,.15); border-radius: 28px;
+      padding: 28px 24px;
+      box-shadow: 0 16px 48px rgba(80,45,15,.20), 0 2px 8px rgba(80,45,15,.10);
       animation: slideUp .6s ease;
     }
-    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .section-title { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
-    .input-group { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .section-title {
+      font-size: .8rem; font-weight: 700; color: var(--ink-soft);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .input-group {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid rgba(120,75,35,.10);
+    }
     .input-group:last-of-type { border-bottom: none; }
-    .input-label { display: flex; align-items: center; gap: 10px; font-size: .95rem; color: rgba(255,255,255,.85); font-weight: 700; }
-    .input-label .unit { font-size: .75rem; color: rgba(255,255,255,.4); font-weight: 400; }
+    .input-label { display: flex; align-items: center; gap: 10px; font-size: .95rem; color: var(--ink-mid); font-weight: 700; }
+    .input-label .unit { font-size: .75rem; color: var(--ink-soft); font-weight: 400; }
     .number-control { display: flex; align-items: center; gap: 8px; }
     .num-btn {
-      width: 32px; height: 32px; border-radius: 50%; border: none;
-      background: rgba(255,255,255,.12); color: #fff; font-size: 1.2rem; font-weight: 700;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(120,75,35,.20);
+      background: rgba(192,96,128,.10); color: var(--ink-mid);
+      font-size: 1.2rem; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s;
     }
-    .num-btn:hover { background: rgba(255,255,255,.22); transform: scale(1.1); }
+    .num-btn:hover { background: rgba(192,96,128,.22); border-color: var(--lotus-deep); transform: scale(1.1); }
     .num-btn:active { transform: scale(.95); }
     .num-input {
-      width: 52px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
-      border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 700;
+      width: 52px; background: rgba(120,75,35,.07); border: 1px solid rgba(120,75,35,.20);
+      border-radius: 10px; color: var(--ink); font-size: 1.05rem; font-weight: 700;
       text-align: center; padding: 6px 4px; outline: none; font-family: inherit;
     }
-    .num-input:focus { border-color: rgba(255,255,255,.5); }
+    .num-input:focus { border-color: var(--lotus-deep); }
+
     .total-preview {
-      margin: 20px 0; background: linear-gradient(135deg, rgba(102,126,234,.2), rgba(118,75,162,.2));
-      border: 1px solid rgba(102,126,234,.3); border-radius: 16px; padding: 14px 20px;
+      margin: 20px 0;
+      background: linear-gradient(135deg, rgba(192,96,128,.12), rgba(38,90,58,.12));
+      border: 1px solid rgba(192,96,128,.25); border-radius: 16px; padding: 14px 20px;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .total-preview .label { font-size: .85rem; color: rgba(255,255,255,.6); }
-    .total-preview .value { font-size: 1.4rem; font-weight: 900; color: #a78bfa; }
+    .total-preview .label { font-size: .85rem; color: var(--ink-soft); }
+    .total-preview .value { font-size: 1.4rem; font-weight: 900; color: var(--lotus-deep); }
+
     .btn-start {
       width: 100%; padding: 16px; border: none; border-radius: 18px;
-      background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+      background: linear-gradient(135deg, var(--lotus-deep), #8a3050); color: #fff;
       font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; cursor: pointer;
-      transition: all .2s; box-shadow: 0 8px 24px rgba(102,126,234,.4);
+      transition: all .2s; box-shadow: 0 8px 24px rgba(192,96,128,.38);
       position: relative; overflow: hidden;
     }
     .btn-start::before {
       content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transition: left .4s;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+      transition: left .4s;
     }
     .btn-start:hover::before { left: 100%; }
-    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,.5); }
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(192,96,128,.50); }
+
     #workout-area { display: none; }
+
     .phase-bar { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 20px; height: 6px; gap: 3px; }
-    .phase-seg { flex: 1; border-radius: 3px; background: rgba(255,255,255,.1); transition: background .3s; }
+    .phase-seg { flex: 1; border-radius: 3px; background: rgba(120,75,35,.12); transition: background .3s; }
     .phase-seg.walk-done { background: linear-gradient(90deg, var(--walk-from), var(--walk-to)); }
     .phase-seg.jog-done  { background: linear-gradient(90deg, var(--jog-from),  var(--jog-to)); }
-    .phase-seg.active { background: rgba(255,255,255,.6); animation: pulse-seg .8s ease-in-out infinite alternate; }
+    .phase-seg.active    { background: var(--lotus-deep); animation: pulse-seg .8s ease-in-out infinite alternate; }
     @keyframes pulse-seg { from { opacity: .6; } to { opacity: 1; } }
+
     .status-row { text-align: center; margin-bottom: 16px; }
     .status-badge { display: inline-block; padding: 6px 20px; border-radius: 50px; font-size: .9rem; font-weight: 900; letter-spacing: 1px; transition: all .4s ease; }
-    .badge-walk { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #1a1a2e; box-shadow: 0 4px 16px rgba(247,151,30,.4); }
-    .badge-jog  { background: linear-gradient(135deg, var(--jog-from),  var(--jog-to));  color: #fff;    box-shadow: 0 4px 16px rgba(17,153,142,.4); }
-    .set-info { text-align: center; font-size: .82rem; color: rgba(255,255,255,.4); margin-bottom: 10px; letter-spacing: 1px; }
+    .badge-walk { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #fff; box-shadow: 0 4px 16px rgba(200,112,16,.38); }
+    .badge-jog  { background: linear-gradient(135deg, var(--jog-from),  var(--jog-to));  color: #fff; box-shadow: 0 4px 16px rgba(26,122,80,.38); }
+
+    .set-info { text-align: center; font-size: .82rem; color: var(--ink-soft); margin-bottom: 10px; letter-spacing: 1px; }
+
     .timer-container { position: relative; width: 220px; height: 220px; margin: 0 auto 20px; }
     .timer-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .timer-track    { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 8; }
+    .timer-track    { fill: none; stroke: rgba(120,75,35,.12); stroke-width: 8; }
     .timer-progress { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 628; stroke-dashoffset: 0; transition: stroke-dashoffset .9s linear, stroke .4s ease; }
     .timer-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-    .timer-display { font-size: 3.2rem; font-weight: 900; color: #fff; letter-spacing: 2px; line-height: 1; text-shadow: 0 0 30px rgba(255,255,255,.3); }
-    .timer-label   { font-size: .7rem; color: rgba(255,255,255,.35); letter-spacing: 1px; margin-top: 4px; }
-    .motivation { text-align: center; font-size: .92rem; color: rgba(255,255,255,.7); margin-bottom: 20px; min-height: 22px; font-style: italic; transition: opacity .3s; }
+    .timer-display { font-size: 3.2rem; font-weight: 900; color: var(--ink); letter-spacing: 2px; line-height: 1; text-shadow: 1px 2px 8px rgba(120,70,30,.20); }
+    .timer-label   { font-size: .7rem; color: var(--ink-soft); letter-spacing: 1px; margin-top: 4px; }
+
+    .motivation { text-align: center; font-size: .92rem; color: var(--ink-mid); margin-bottom: 20px; min-height: 22px; font-style: italic; transition: opacity .3s; }
+
     .control-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
     .btn-control { flex: 1; padding: 13px 10px; border: none; border-radius: 14px; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
-    .btn-pause-resume { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; box-shadow: 0 4px 14px rgba(247,151,30,.3); }
-    .btn-pause-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(247,151,30,.4); }
-    .btn-pause-resume.is-paused { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; box-shadow: 0 4px 14px rgba(17,153,142,.3); }
-    .btn-stop { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.6); }
-    .btn-stop:hover { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.4); color: #f87171; }
+    .btn-pause-resume { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #fff; box-shadow: 0 4px 14px rgba(200,112,16,.30); }
+    .btn-pause-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(200,112,16,.42); }
+    .btn-pause-resume.is-paused { background: linear-gradient(135deg, var(--jog-from), var(--jog-to)); color: #fff; box-shadow: 0 4px 14px rgba(26,122,80,.30); }
+    .btn-stop { background: rgba(120,75,35,.08); border: 1px solid rgba(120,75,35,.18); color: var(--ink-soft); }
+    .btn-stop:hover { background: rgba(180,50,50,.12); border-color: rgba(180,50,50,.35); color: #a03030; }
+
     @keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.12)} 28%{transform:scale(1)} 42%{transform:scale(1.08)} 70%{transform:scale(1)} }
     .heartbeat { animation: heartbeat .8s ease; }
+
     .celebration { text-align: center; padding: 10px 0; }
     .celebration .trophy { font-size: 3.5rem; display: block; margin-bottom: 8px; animation: bounce .6s ease infinite alternate; }
     @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-    .celebration .congrats     { font-size: 1.3rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
-    .celebration .personal-msg { font-size: 1rem; color: #ffd200; font-weight: 700; margin-bottom: 8px; }
-    .celebration .encourage    { font-size: .88rem; color: rgba(255,255,255,.6); }
+    .celebration .congrats     { font-size: 1.3rem; font-weight: 900; color: var(--ink);      margin-bottom: 4px; }
+    .celebration .personal-msg { font-size: 1rem;   font-weight: 700;  color: var(--lotus-deep); margin-bottom: 8px; }
+    .celebration .encourage    { font-size: .88rem; color: var(--ink-soft); }
+
     .btn-finish {
       margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px;
-      background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff;
+      background: linear-gradient(135deg, var(--lotus-deep), #8a3050); color: #fff;
       font-size: 1rem; font-weight: 900; cursor: pointer; transition: all .2s;
-      letter-spacing: 1px; box-shadow: 0 6px 20px rgba(245,87,108,.35);
+      letter-spacing: 1px; box-shadow: 0 6px 20px rgba(192,96,128,.35);
     }
-    .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,87,108,.5); }
-    .history-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.08); }
+    .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(192,96,128,.50); }
+
+    .history-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(120,75,35,.10); }
     .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .history-title { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.5); letter-spacing: 1px; }
+    .history-title { font-size: .85rem; font-weight: 700; color: var(--ink-soft); letter-spacing: 1px; }
     .history-actions { display: flex; gap: 6px; }
-    .btn-small { padding: 5px 12px; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.55); font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; }
-    .btn-small:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .btn-small { padding: 5px 12px; border: 1px solid rgba(120,75,35,.20); border-radius: 8px; background: rgba(120,75,35,.06); color: var(--ink-soft); font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .btn-small:hover { background: rgba(120,75,35,.14); color: var(--ink); }
     .history-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-    .history-table th { color: rgba(255,255,255,.3); font-weight: 700; padding: 6px 4px; text-align: left; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.07); }
-    .history-table td { color: rgba(255,255,255,.65); padding: 7px 4px; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .history-table th { color: var(--ink-soft); font-weight: 700; padding: 6px 4px; text-align: left; letter-spacing: .5px; border-bottom: 1px solid rgba(120,75,35,.12); }
+    .history-table td { color: var(--ink-mid); padding: 7px 4px; border-bottom: 1px solid rgba(120,75,35,.06); }
     .history-table tr:last-child td { border-bottom: none; }
-    .btn-del { padding: 3px 8px; border: 1px solid rgba(239,68,68,.3); border-radius: 5px; background: transparent; color: rgba(239,68,68,.6); font-size: .7rem; cursor: pointer; transition: all .15s; }
-    .btn-del:hover { background: rgba(239,68,68,.15); color: #f87171; }
+    .btn-del { padding: 3px 8px; border: 1px solid rgba(180,50,50,.30); border-radius: 5px; background: transparent; color: rgba(180,50,50,.60); font-size: .7rem; cursor: pointer; transition: all .15s; }
+    .btn-del:hover { background: rgba(180,50,50,.10); color: #c03030; }
+
     .confetti-piece { position: fixed; top: -10px; border-radius: 2px; animation: confetti-fall linear forwards; pointer-events: none; z-index: 999; }
     @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
-    /* PWA 安裝提示橫幅 */
+    /* ── PWA 安裝橫幅 ──────────────────────────────────────────────────── */
     #install-banner {
       display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       width: calc(100% - 40px); max-width: 420px;
-      background: linear-gradient(135deg, rgba(102,126,234,.95), rgba(118,75,162,.95));
-      backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.2);
+      background: linear-gradient(135deg, rgba(192,96,128,.95), rgba(140,48,80,.95));
+      backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.20);
       border-radius: 18px; padding: 14px 16px;
-      display: none; align-items: center; gap: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5); z-index: 1000; animation: slideUp .4s ease;
+      align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.30); z-index: 1000; animation: slideUp .4s ease;
     }
     #install-banner.visible { display: flex; }
     #install-banner .banner-text { flex: 1; font-size: .85rem; color: #fff; font-weight: 700; line-height: 1.4; }
     #install-banner .banner-text small { font-weight: 400; opacity: .75; font-size: .75rem; display: block; margin-top: 2px; }
-    #install-banner .btn-install { padding: 8px 16px; border: none; border-radius: 10px; background: #fff; color: #667eea; font-size: .82rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all .15s; }
-    #install-banner .btn-install:hover { background: #f0f0ff; }
+    #install-banner .btn-install { padding: 8px 16px; border: none; border-radius: 10px; background: #fff; color: var(--lotus-deep); font-size: .82rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    #install-banner .btn-install:hover { background: #fff0f4; }
     #install-banner .btn-dismiss { width: 28px; height: 28px; border: none; background: rgba(255,255,255,.15); border-radius: 50%; color: #fff; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
-    #install-banner .btn-dismiss:hover { background: rgba(255,255,255,.25); }
+    #install-banner .btn-dismiss:hover { background: rgba(255,255,255,.28); }
 
-    /* 離線狀態提示 */
+    /* ── 離線通知 ──────────────────────────────────────────────────────── */
     #offline-notice {
       display: none; position: fixed; top: 0; left: 0; right: 0;
-      background: rgba(239,68,68,.9); color: #fff; text-align: center;
+      background: rgba(160,50,50,.90); color: #fff; text-align: center;
       padding: 8px; font-size: .82rem; font-weight: 700; z-index: 1001;
     }
     #offline-notice.visible { display: block; }
   </style>
 </head>
 <body>
+
 <!-- 離線通知 -->
 <div id="offline-notice">📴 目前離線 — 應用程式已快取，可正常使用</div>
 
@@ -184,10 +241,169 @@
   <button class="btn-dismiss" onclick="dismissInstallBanner()">✕</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     常玉《荷》— SVG 畫作背景
+     以濃墨荷葉、粉荷、纖梗、水珠、落款印章重現常玉筆意
+     ═══════════════════════════════════════════════════════════════════════ -->
+<svg id="lotus-bg" xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 420 860" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- 墨韻暈染濾鏡 -->
+    <filter id="ink" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.038 0.055" numOctaves="3" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- 葉面放射漸層 1（左下大葉） -->
+    <radialGradient id="lg1" cx="38%" cy="32%">
+      <stop offset="0%"   stop-color="#3d7550"/>
+      <stop offset="55%"  stop-color="#1c4530"/>
+      <stop offset="100%" stop-color="#0d2818"/>
+    </radialGradient>
+    <!-- 葉面放射漸層 2（右側中葉） -->
+    <radialGradient id="lg2" cx="52%" cy="45%">
+      <stop offset="0%"   stop-color="#2e5e3e"/>
+      <stop offset="65%"  stop-color="#163526"/>
+      <stop offset="100%" stop-color="#0a1e14"/>
+    </radialGradient>
+    <!-- 葉面放射漸層 3（右上小葉，較亮） -->
+    <radialGradient id="lg3" cx="45%" cy="38%">
+      <stop offset="0%"   stop-color="#4a8060"/>
+      <stop offset="60%"  stop-color="#265a3a"/>
+      <stop offset="100%" stop-color="#143220"/>
+    </radialGradient>
+    <!-- 荷花花瓣外層 -->
+    <radialGradient id="pg1" cx="50%" cy="78%">
+      <stop offset="0%"   stop-color="#fde8ef"/>
+      <stop offset="45%"  stop-color="#eda0bc"/>
+      <stop offset="100%" stop-color="#c46080"/>
+    </radialGradient>
+    <!-- 荷花花瓣內層（更白、更透） -->
+    <radialGradient id="pg2" cx="50%" cy="65%">
+      <stop offset="0%"   stop-color="#fff5f8"/>
+      <stop offset="55%"  stop-color="#f5b8d0"/>
+      <stop offset="100%" stop-color="#d87098"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ─── 荷葉 1：左下，最大葉，正面 ─────────────────────────────────── -->
+  <g transform="translate(22,748) rotate(-22)" filter="url(#ink)">
+    <ellipse rx="152" ry="134" fill="url(#lg1)" opacity="0.93"/>
+    <!-- 葉缺口（荷葉特徵） -->
+    <ellipse rx="20" ry="28" cy="-115" fill="#f2e6ce" opacity="0.99"/>
+    <!-- 主脈 -->
+    <line y1="-4" y2="-120" stroke="#0d2818" stroke-width="2.2" opacity="0.48" stroke-linecap="round"/>
+    <!-- 側脈 -->
+    <line x2="102" y2="-56"  stroke="#0d2818" stroke-width="1.3" opacity="0.30" stroke-linecap="round"/>
+    <line x2="-102" y2="-56" stroke="#0d2818" stroke-width="1.3" opacity="0.30" stroke-linecap="round"/>
+    <line x2="138"  y2="14"  stroke="#0d2818" stroke-width="1.1" opacity="0.22" stroke-linecap="round"/>
+    <line x2="-138" y2="14"  stroke="#0d2818" stroke-width="1.1" opacity="0.22" stroke-linecap="round"/>
+    <line x2="110"  y2="76"  stroke="#0d2818" stroke-width="1.0" opacity="0.18" stroke-linecap="round"/>
+    <line x2="-110" y2="76"  stroke="#0d2818" stroke-width="1.0" opacity="0.18" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 2：右側，中大葉，微傾 ──────────────────────────────────── -->
+  <g transform="translate(418,532) rotate(20)" filter="url(#ink)">
+    <ellipse rx="122" ry="110" fill="url(#lg2)" opacity="0.91"/>
+    <ellipse rx="16" ry="23" cy="-97" fill="#f2e6ce" opacity="0.99"/>
+    <line y1="-3" y2="-102" stroke="#0a1e14" stroke-width="2.0" opacity="0.46" stroke-linecap="round"/>
+    <line x2="88"  y2="-49"  stroke="#0a1e14" stroke-width="1.2" opacity="0.28" stroke-linecap="round"/>
+    <line x2="-88" y2="-49"  stroke="#0a1e14" stroke-width="1.2" opacity="0.28" stroke-linecap="round"/>
+    <line x2="114" y2="18"   stroke="#0a1e14" stroke-width="1.0" opacity="0.20" stroke-linecap="round"/>
+    <line x2="-114" y2="18"  stroke="#0a1e14" stroke-width="1.0" opacity="0.20" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 3：右上角，小葉，仰角較淡 ──────────────────────────────── -->
+  <g transform="translate(378,148) rotate(-36)" filter="url(#ink)">
+    <ellipse rx="92" ry="80" fill="url(#lg3)" opacity="0.74"/>
+    <ellipse rx="13" ry="18" cy="-70" fill="#f2e6ce" opacity="0.99"/>
+    <line y1="-2" y2="-74" stroke="#143220" stroke-width="1.7" opacity="0.40" stroke-linecap="round"/>
+    <line x2="66"  y2="-37" stroke="#143220" stroke-width="1.0" opacity="0.26" stroke-linecap="round"/>
+    <line x2="-66" y2="-37" stroke="#143220" stroke-width="1.0" opacity="0.26" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 4：左側，半入畫面，捲邊 ───────────────────────────────── -->
+  <g transform="translate(-32,422) rotate(14)">
+    <ellipse rx="86" ry="75" fill="#1c4530" opacity="0.68" filter="url(#ink)"/>
+    <!-- 捲邊高光 -->
+    <ellipse rx="24" ry="14" cx="58" cy="-55" fill="#2e6845" opacity="0.40"/>
+  </g>
+
+  <!-- ─── 荷梗（蓮莖，常玉以細筆表現） ────────────────────────────────── -->
+  <!-- 梗1 → 左下大葉 -->
+  <path d="M 48,870 C 38,838 24,808 22,778 C 18,756 22,750 22,748"
+        stroke="#503818" stroke-width="3.5" fill="none" opacity="0.72" stroke-linecap="round"/>
+  <!-- 梗2 → 右側中葉 -->
+  <path d="M 338,870 C 358,800 388,720 408,645 C 420,590 418,550 418,532"
+        stroke="#443018" stroke-width="3.0" fill="none" opacity="0.68" stroke-linecap="round"/>
+  <!-- 梗3 → 右上小葉 -->
+  <path d="M 296,870 C 318,748 348,588 368,388 C 376,268 378,198 378,148"
+        stroke="#443018" stroke-width="2.5" fill="none" opacity="0.60" stroke-linecap="round"/>
+  <!-- 梗4 → 盛開荷花 -->
+  <path d="M 324,870 C 336,768 344,660 340,558 C 338,502 338,462 338,432"
+        stroke="#443018" stroke-width="2.2" fill="none" opacity="0.64" stroke-linecap="round"/>
+  <!-- 梗5 → 花苞 -->
+  <path d="M 150,870 C 138,768 118,648 104,528 C 96,460 95,415 95,392"
+        stroke="#503818" stroke-width="2.0" fill="none" opacity="0.60" stroke-linecap="round"/>
+
+  <!-- ─── 荷花（盛開）─────────────────────────────────────────────────── -->
+  <g transform="translate(338,415)">
+    <!-- 外層 8 瓣 -->
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(315)"/>
+    <!-- 內層 6 瓣 -->
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(60)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(120)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(240)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(300)"/>
+    <!-- 蓮蓬 -->
+    <circle r="15" fill="#d4a840" opacity="0.96"/>
+    <circle r="10" fill="#c09030" opacity="0.92"/>
+    <!-- 蓮子 -->
+    <circle cx="0"   cy="-6.5" r="2.2" fill="#7a5020"/>
+    <circle cx="5.6" cy="3.2"  r="2.2" fill="#7a5020"/>
+    <circle cx="-5.6" cy="3.2" r="2.2" fill="#7a5020"/>
+    <circle cx="0"   cy="8.5"  r="2.2" fill="#7a5020"/>
+  </g>
+
+  <!-- ─── 花苞（含苞待放） ─────────────────────────────────────────────── -->
+  <g transform="translate(95,380)">
+    <!-- 花萼 -->
+    <ellipse rx="11" ry="9" cy="25" fill="#265a3a" opacity="0.88"/>
+    <!-- 花瓣 -->
+    <ellipse cx="0" cy="-24" rx="10" ry="29" fill="#d080a0" opacity="0.80" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-22" rx="9"  ry="25" fill="#e8a0bc" opacity="0.86" transform="rotate(28)"/>
+    <ellipse cx="0" cy="-22" rx="9"  ry="25" fill="#e8a0bc" opacity="0.86" transform="rotate(-28)"/>
+    <ellipse cx="0" cy="-20" rx="7"  ry="21" fill="#fdd8ea" opacity="0.93" transform="rotate(0)"/>
+  </g>
+
+  <!-- ─── 荷葉水珠（常玉畫荷常見細節）────────────────────────────────── -->
+  <circle cx="20" cy="720" r="5.0" fill="rgba(255,255,255,0.65)" opacity="0.80"/>
+  <circle cx="33" cy="735" r="3.2" fill="rgba(255,255,255,0.55)" opacity="0.75"/>
+  <circle cx="9"  cy="738" r="3.8" fill="rgba(255,255,255,0.60)" opacity="0.78"/>
+  <circle cx="26" cy="748" r="2.2" fill="rgba(255,255,255,0.50)" opacity="0.65"/>
+
+  <!-- ─── 仿常玉落款紅印 ─────────────────────────────────────────────── -->
+  <g transform="translate(394,798)">
+    <rect x="-14" y="-14" width="28" height="28" rx="4" fill="#b82828" opacity="0.82"/>
+    <text x="0" y="7" font-size="15" text-anchor="middle" fill="#fff"
+          font-family="serif" font-weight="700" opacity="0.96">荷</text>
+  </g>
+</svg>
+
+<!-- 隱藏的 bg-particles（JS 仍會呼叫，但 CSS 已隱藏） -->
 <div class="bg-particles" id="bg-particles"></div>
+
 <div class="app">
   <div class="header">
-    <h1>💪 間歇訓練計時器</h1>
+    <h1>🌸 間歇訓練計時器</h1>
     <div class="subtitle">雁君的專屬運動夥伴</div>
   </div>
   <div class="card">
@@ -223,13 +439,13 @@
         <span class="label">⏱ 預估總時間</span>
         <span class="value" id="est-total">10.0 分鐘</span>
       </div>
-      <button class="btn-start" onclick="startWorkout()">🚀 開始訓練！</button>
+      <button class="btn-start" onclick="startWorkout()">🌸 開始訓練！</button>
       <div class="history-section">
         <div class="history-header">
           <span class="history-title">📋 運動紀錄</span>
           <div class="history-actions">
             <button class="btn-small" onclick="downloadCSV()">📥 CSV</button>
-            <button class="btn-small" onclick="clearAll()" style="border-color:rgba(239,68,68,.3);color:rgba(239,68,68,.6)">🗑 清空</button>
+            <button class="btn-small" onclick="clearAll()" style="border-color:rgba(180,50,50,.30);color:rgba(180,50,50,.65)">🗑 清空</button>
           </div>
         </div>
         <table class="history-table">
@@ -246,9 +462,9 @@
           <span class="trophy">🏆</span>
           <div class="congrats">訓練完成！</div>
           <div class="personal-msg">雁君你真的很棒！</div>
-          <div class="encourage">汗水是最美的勳章 ✨<br>下次繼續努力，你做到了！</div>
+          <div class="encourage">汗水是最美的勳章 🌸<br>下次繼續努力，你做到了！</div>
         </div>
-        <button class="btn-finish" onclick="resetToSetup()">💪 再來一次！</button>
+        <button class="btn-finish" onclick="resetToSetup()">🌸 再來一次！</button>
       </div>
       <div id="active-workout">
         <div class="phase-bar" id="phase-bar"></div>
@@ -262,10 +478,10 @@
             <circle class="timer-progress" id="timer-arc" cx="110" cy="110" r="100" stroke="url(#walkGrad)"/>
             <defs>
               <linearGradient id="walkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#f7971e"/><stop offset="100%" style="stop-color:#ffd200"/>
+                <stop offset="0%" style="stop-color:#c87010"/><stop offset="100%" style="stop-color:#e8a820"/>
               </linearGradient>
               <linearGradient id="jogGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#11998e"/><stop offset="100%" style="stop-color:#38ef7d"/>
+                <stop offset="0%" style="stop-color:#1a7a50"/><stop offset="100%" style="stop-color:#38c870"/>
               </linearGradient>
             </defs>
           </svg>
@@ -309,20 +525,14 @@ let lastTickPhase    = 'walk';
 let lastTickSet      = 1;
 
 // ── 激勵語句 ──────────────────────────────────────────────────────────────────
-const WALK_MSGS = ['放輕鬆，調整呼吸！','享受快走的節奏 🎵','棒棒的！保持步伐！','這段路程你最穩！','快走也是很棒的鍛鍊！','呼吸，放鬆，前進！'];
+const WALK_MSGS = ['放輕鬆，調整呼吸！','享受快走的節奏 🌸','棒棒的！保持步伐！','這段路程你最穩！','快走也是很棒的鍛鍊！','呼吸，放鬆，前進！'];
 const JOG_MSGS  = ['衝啊！雁君超強的！💪','跑起來！你做得到！🔥','加速！感受力量！⚡','燃燒吧！你是最棒的！','全力以赴！GO GO GO！','雁君加油！超越自己！🚀'];
 
-// ── 背景粒子 ──────────────────────────────────────────────────────────────────
+// ── 背景粒子（新主題中已隱藏，此函式保留以免報錯）────────────────────────
 function initParticles() {
   const c = document.getElementById('bg-particles');
-  const colors = ['#667eea','#764ba2','#f7971e','#11998e','#f093fb'];
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = 20 + Math.random() * 60;
-    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*8}s;`;
-    c.appendChild(p);
-  }
+  if (!c) return;
+  // 新主題使用 SVG 荷花畫作取代粒子動畫
 }
 
 // ── 數字控制 ──────────────────────────────────────────────────────────────────
@@ -694,9 +904,9 @@ function updatePhaseBar() {
   }
 }
 
-// ── 彩色紙屑 ─────────────────────────────────────────────────────────────────
+// ── 彩色紙屑（荷花色系）──────────────────────────────────────────────────────
 function launchConfetti() {
-  const colors = ['#ffd200','#f7971e','#11998e','#38ef7d','#f093fb','#667eea','#fff'];
+  const colors = ['#d4a040','#c87010','#e8a0b8','#c06080','#265a3a','#8a3050','#f5d8ea','#fde8c0'];
   for (let i = 0; i < 60; i++) {
     setTimeout(() => {
       const p = document.createElement('div');
@@ -812,7 +1022,10 @@ function updateHistoryTable() {
   const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
   const tbody = document.getElementById('history-body');
   tbody.innerHTML = '';
-  if (!history.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:rgba(255,255,255,.25);text-align:center;padding:12px">還沒有紀錄，快去訓練！💪</td></tr>'; return; }
+  if (!history.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:rgba(120,75,35,.40);text-align:center;padding:12px">還沒有紀錄，快去訓練！🌸</td></tr>';
+    return;
+  }
   for (let i = history.length - 1; i >= 0; i--) {
     const r = history[i], tr = document.createElement('tr');
     tr.innerHTML = `<td>${r.date}</td><td>${r.setting}</td><td style="text-align:center">${r.total}</td><td><button class="btn-del" onclick="deleteRecord(${i})">✕</button></td>`;
