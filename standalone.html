@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>雁君的間歇訓練計時器 💪</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+    /* ── 常玉《荷》色盤 ──────────────────────────────────────────────── */
+    :root {
+      --ink:        #1e120a;   /* 濃墨 */
+      --ink-mid:    #4a3018;   /* 中墨 */
+      --ink-soft:   #7a5530;   /* 淡墨 */
+      --paper:      #f2e6ce;   /* 宣紙 */
+      --lotus-deep: #c06080;   /* 深荷粉 */
+      --lotus-pink: #e090b0;   /* 荷粉 */
+      --lotus-bud:  #d080a0;   /* 含苞 */
+      --leaf-dark:  #163220;   /* 葉墨 */
+      --leaf-mid:   #265a3a;   /* 葉綠 */
+      --walk-from:  #c87010;
+      --walk-to:    #e8a820;
+      --jog-from:   #1a7a50;
+      --jog-to:     #38c870;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(150deg, #f5edd5 0%, #ede2c2 45%, #f0e8d2 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; overflow-x: hidden;
+    }
+
+    /* 原本的粒子動畫在新主題中隱藏 */
+    .bg-particles { display: none; }
+    .particle     { display: none; }
+
+    /* ── 常玉荷花 SVG 畫作背景 ────────────────────────────────────────── */
+    #lotus-bg {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    .app { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+    .header { text-align: center; margin-bottom: 24px; animation: slideDown .6s ease; }
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .header h1 {
+      font-size: 1.8rem; font-weight: 900; color: var(--ink);
+      letter-spacing: 2px; text-shadow: 1px 2px 8px rgba(120,70,30,.18);
+    }
+    .header .subtitle { font-size: .85rem; color: var(--ink-soft); margin-top: 4px; letter-spacing: 1px; }
+
+    /* 宣紙質感卡片 */
+    .card {
+      background: rgba(242,230,206,.90); backdrop-filter: blur(18px);
+      border: 1px solid rgba(120,75,35,.15); border-radius: 28px;
+      padding: 28px 24px;
+      box-shadow: 0 16px 48px rgba(80,45,15,.20), 0 2px 8px rgba(80,45,15,.10);
+      animation: slideUp .6s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .section-title {
+      font-size: .8rem; font-weight: 700; color: var(--ink-soft);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .input-group {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid rgba(120,75,35,.10);
+    }
+    .input-group:last-of-type { border-bottom: none; }
+    .input-label { display: flex; align-items: center; gap: 10px; font-size: .95rem; color: var(--ink-mid); font-weight: 700; }
+    .input-label .unit { font-size: .75rem; color: var(--ink-soft); font-weight: 400; }
+    .number-control { display: flex; align-items: center; gap: 8px; }
+    .num-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(120,75,35,.20);
+      background: rgba(192,96,128,.10); color: var(--ink-mid);
+      font-size: 1.2rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s;
+    }
+    .num-btn:hover { background: rgba(192,96,128,.22); border-color: var(--lotus-deep); transform: scale(1.1); }
+    .num-btn:active { transform: scale(.95); }
+    .num-input {
+      width: 52px; background: rgba(120,75,35,.07); border: 1px solid rgba(120,75,35,.20);
+      border-radius: 10px; color: var(--ink); font-size: 1.05rem; font-weight: 700;
+      text-align: center; padding: 6px 4px; outline: none; font-family: inherit;
+    }
+    .num-input:focus { border-color: var(--lotus-deep); }
+
+    .total-preview {
+      margin: 20px 0;
+      background: linear-gradient(135deg, rgba(192,96,128,.12), rgba(38,90,58,.12));
+      border: 1px solid rgba(192,96,128,.25); border-radius: 16px; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .total-preview .label { font-size: .85rem; color: var(--ink-soft); }
+    .total-preview .value { font-size: 1.4rem; font-weight: 900; color: var(--lotus-deep); }
+
+    .btn-start {
+      width: 100%; padding: 16px; border: none; border-radius: 18px;
+      background: linear-gradient(135deg, var(--lotus-deep), #8a3050); color: #fff;
+      font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; cursor: pointer;
+      transition: all .2s; box-shadow: 0 8px 24px rgba(192,96,128,.38);
+      position: relative; overflow: hidden;
+    }
+    .btn-start::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+      transition: left .4s;
+    }
+    .btn-start:hover::before { left: 100%; }
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(192,96,128,.50); }
+
+    #workout-area { display: none; }
+
+    .phase-bar { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 20px; height: 6px; gap: 3px; }
+    .phase-seg { flex: 1; border-radius: 3px; background: rgba(120,75,35,.12); transition: background .3s; }
+    .phase-seg.walk-done { background: linear-gradient(90deg, var(--walk-from), var(--walk-to)); }
+    .phase-seg.jog-done  { background: linear-gradient(90deg, var(--jog-from),  var(--jog-to)); }
+    .phase-seg.active    { background: var(--lotus-deep); animation: pulse-seg .8s ease-in-out infinite alternate; }
+    @keyframes pulse-seg { from { opacity: .6; } to { opacity: 1; } }
+
+    .status-row { text-align: center; margin-bottom: 16px; }
+    .status-badge { display: inline-block; padding: 6px 20px; border-radius: 50px; font-size: .9rem; font-weight: 900; letter-spacing: 1px; transition: all .4s ease; }
+    .badge-walk { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #fff; box-shadow: 0 4px 16px rgba(200,112,16,.38); }
+    .badge-jog  { background: linear-gradient(135deg, var(--jog-from),  var(--jog-to));  color: #fff; box-shadow: 0 4px 16px rgba(26,122,80,.38); }
+
+    .set-info { text-align: center; font-size: .82rem; color: var(--ink-soft); margin-bottom: 10px; letter-spacing: 1px; }
+
+    .timer-container { position: relative; width: 220px; height: 220px; margin: 0 auto 20px; }
+    .timer-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .timer-track    { fill: none; stroke: rgba(120,75,35,.12); stroke-width: 8; }
+    .timer-progress { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 628; stroke-dashoffset: 0; transition: stroke-dashoffset .9s linear, stroke .4s ease; }
+    .timer-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+    .timer-display { font-size: 3.2rem; font-weight: 900; color: var(--ink); letter-spacing: 2px; line-height: 1; text-shadow: 1px 2px 8px rgba(120,70,30,.20); }
+    .timer-label   { font-size: .7rem; color: var(--ink-soft); letter-spacing: 1px; margin-top: 4px; }
+
+    .motivation { text-align: center; font-size: .92rem; color: var(--ink-mid); margin-bottom: 20px; min-height: 22px; font-style: italic; transition: opacity .3s; }
+
+    .control-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+    .btn-control { flex: 1; padding: 13px 10px; border: none; border-radius: 14px; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
+    .btn-pause-resume { background: linear-gradient(135deg, var(--walk-from), var(--walk-to)); color: #fff; box-shadow: 0 4px 14px rgba(200,112,16,.30); }
+    .btn-pause-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(200,112,16,.42); }
+    .btn-pause-resume.is-paused { background: linear-gradient(135deg, var(--jog-from), var(--jog-to)); color: #fff; box-shadow: 0 4px 14px rgba(26,122,80,.30); }
+    .btn-stop { background: rgba(120,75,35,.08); border: 1px solid rgba(120,75,35,.18); color: var(--ink-soft); }
+    .btn-stop:hover { background: rgba(180,50,50,.12); border-color: rgba(180,50,50,.35); color: #a03030; }
+
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.12)} 28%{transform:scale(1)} 42%{transform:scale(1.08)} 70%{transform:scale(1)} }
+    .heartbeat { animation: heartbeat .8s ease; }
+
+    .celebration { text-align: center; padding: 10px 0; }
+    .celebration .trophy { font-size: 3.5rem; display: block; margin-bottom: 8px; animation: bounce .6s ease infinite alternate; }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+    .celebration .congrats     { font-size: 1.3rem; font-weight: 900; color: var(--ink);      margin-bottom: 4px; }
+    .celebration .personal-msg { font-size: 1rem;   font-weight: 700;  color: var(--lotus-deep); margin-bottom: 8px; }
+    .celebration .encourage    { font-size: .88rem; color: var(--ink-soft); }
+
+    .btn-finish {
+      margin-top: 16px; width: 100%; padding: 14px; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, var(--lotus-deep), #8a3050); color: #fff;
+      font-size: 1rem; font-weight: 900; cursor: pointer; transition: all .2s;
+      letter-spacing: 1px; box-shadow: 0 6px 20px rgba(192,96,128,.35);
+    }
+    .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(192,96,128,.50); }
+
+    .history-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(120,75,35,.10); }
+    .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .history-title { font-size: .85rem; font-weight: 700; color: var(--ink-soft); letter-spacing: 1px; }
+    .history-actions { display: flex; gap: 6px; }
+    .btn-small { padding: 5px 12px; border: 1px solid rgba(120,75,35,.20); border-radius: 8px; background: rgba(120,75,35,.06); color: var(--ink-soft); font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .btn-small:hover { background: rgba(120,75,35,.14); color: var(--ink); }
+    .history-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .history-table th { color: var(--ink-soft); font-weight: 700; padding: 6px 4px; text-align: left; letter-spacing: .5px; border-bottom: 1px solid rgba(120,75,35,.12); }
+    .history-table td { color: var(--ink-mid); padding: 7px 4px; border-bottom: 1px solid rgba(120,75,35,.06); }
+    .history-table tr:last-child td { border-bottom: none; }
+    .btn-del { padding: 3px 8px; border: 1px solid rgba(180,50,50,.30); border-radius: 5px; background: transparent; color: rgba(180,50,50,.60); font-size: .7rem; cursor: pointer; transition: all .15s; }
+    .btn-del:hover { background: rgba(180,50,50,.10); color: #c03030; }
+
+    .confetti-piece { position: fixed; top: -10px; border-radius: 2px; animation: confetti-fall linear forwards; pointer-events: none; z-index: 999; }
+    @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* ── PWA 安裝橫幅 ──────────────────────────────────────────────────── */
+    #install-banner {
+      display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 40px); max-width: 420px;
+      background: linear-gradient(135deg, rgba(192,96,128,.95), rgba(140,48,80,.95));
+      backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.20);
+      border-radius: 18px; padding: 14px 16px;
+      align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.30); z-index: 1000; animation: slideUp .4s ease;
+    }
+    #install-banner.visible { display: flex; }
+    #install-banner .banner-text { flex: 1; font-size: .85rem; color: #fff; font-weight: 700; line-height: 1.4; }
+    #install-banner .banner-text small { font-weight: 400; opacity: .75; font-size: .75rem; display: block; margin-top: 2px; }
+    #install-banner .btn-install { padding: 8px 16px; border: none; border-radius: 10px; background: #fff; color: var(--lotus-deep); font-size: .82rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    #install-banner .btn-install:hover { background: #fff0f4; }
+    #install-banner .btn-dismiss { width: 28px; height: 28px; border: none; background: rgba(255,255,255,.15); border-radius: 50%; color: #fff; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+    #install-banner .btn-dismiss:hover { background: rgba(255,255,255,.28); }
+
+    /* ── 離線通知 ──────────────────────────────────────────────────────── */
+    #offline-notice {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(160,50,50,.90); color: #fff; text-align: center;
+      padding: 8px; font-size: .82rem; font-weight: 700; z-index: 1001;
+    }
+    #offline-notice.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- 離線通知 -->
+<div id="offline-notice">📴 目前離線 — 應用程式已快取，可正常使用</div>
+
+<!-- PWA 安裝提示橫幅 -->
+<div id="install-banner">
+  <div class="banner-text">
+    📲 安裝到主畫面
+    <small>開機自動啟動，隨時可用！</small>
+  </div>
+  <button class="btn-install" id="btn-install-pwa">安裝</button>
+  <button class="btn-dismiss" onclick="dismissInstallBanner()">✕</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     常玉《荷》— SVG 畫作背景
+     以濃墨荷葉、粉荷、纖梗、水珠、落款印章重現常玉筆意
+     ═══════════════════════════════════════════════════════════════════════ -->
+<svg id="lotus-bg" xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 420 860" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- 墨韻暈染濾鏡 -->
+    <filter id="ink" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.038 0.055" numOctaves="3" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- 葉面放射漸層 1（左下大葉） -->
+    <radialGradient id="lg1" cx="38%" cy="32%">
+      <stop offset="0%"   stop-color="#3d7550"/>
+      <stop offset="55%"  stop-color="#1c4530"/>
+      <stop offset="100%" stop-color="#0d2818"/>
+    </radialGradient>
+    <!-- 葉面放射漸層 2（右側中葉） -->
+    <radialGradient id="lg2" cx="52%" cy="45%">
+      <stop offset="0%"   stop-color="#2e5e3e"/>
+      <stop offset="65%"  stop-color="#163526"/>
+      <stop offset="100%" stop-color="#0a1e14"/>
+    </radialGradient>
+    <!-- 葉面放射漸層 3（右上小葉，較亮） -->
+    <radialGradient id="lg3" cx="45%" cy="38%">
+      <stop offset="0%"   stop-color="#4a8060"/>
+      <stop offset="60%"  stop-color="#265a3a"/>
+      <stop offset="100%" stop-color="#143220"/>
+    </radialGradient>
+    <!-- 荷花花瓣外層 -->
+    <radialGradient id="pg1" cx="50%" cy="78%">
+      <stop offset="0%"   stop-color="#fde8ef"/>
+      <stop offset="45%"  stop-color="#eda0bc"/>
+      <stop offset="100%" stop-color="#c46080"/>
+    </radialGradient>
+    <!-- 荷花花瓣內層（更白、更透） -->
+    <radialGradient id="pg2" cx="50%" cy="65%">
+      <stop offset="0%"   stop-color="#fff5f8"/>
+      <stop offset="55%"  stop-color="#f5b8d0"/>
+      <stop offset="100%" stop-color="#d87098"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ─── 荷葉 1：左下，最大葉，正面 ─────────────────────────────────── -->
+  <g transform="translate(22,748) rotate(-22)" filter="url(#ink)">
+    <ellipse rx="152" ry="134" fill="url(#lg1)" opacity="0.93"/>
+    <!-- 葉缺口（荷葉特徵） -->
+    <ellipse rx="20" ry="28" cy="-115" fill="#f2e6ce" opacity="0.99"/>
+    <!-- 主脈 -->
+    <line y1="-4" y2="-120" stroke="#0d2818" stroke-width="2.2" opacity="0.48" stroke-linecap="round"/>
+    <!-- 側脈 -->
+    <line x2="102" y2="-56"  stroke="#0d2818" stroke-width="1.3" opacity="0.30" stroke-linecap="round"/>
+    <line x2="-102" y2="-56" stroke="#0d2818" stroke-width="1.3" opacity="0.30" stroke-linecap="round"/>
+    <line x2="138"  y2="14"  stroke="#0d2818" stroke-width="1.1" opacity="0.22" stroke-linecap="round"/>
+    <line x2="-138" y2="14"  stroke="#0d2818" stroke-width="1.1" opacity="0.22" stroke-linecap="round"/>
+    <line x2="110"  y2="76"  stroke="#0d2818" stroke-width="1.0" opacity="0.18" stroke-linecap="round"/>
+    <line x2="-110" y2="76"  stroke="#0d2818" stroke-width="1.0" opacity="0.18" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 2：右側，中大葉，微傾 ──────────────────────────────────── -->
+  <g transform="translate(418,532) rotate(20)" filter="url(#ink)">
+    <ellipse rx="122" ry="110" fill="url(#lg2)" opacity="0.91"/>
+    <ellipse rx="16" ry="23" cy="-97" fill="#f2e6ce" opacity="0.99"/>
+    <line y1="-3" y2="-102" stroke="#0a1e14" stroke-width="2.0" opacity="0.46" stroke-linecap="round"/>
+    <line x2="88"  y2="-49"  stroke="#0a1e14" stroke-width="1.2" opacity="0.28" stroke-linecap="round"/>
+    <line x2="-88" y2="-49"  stroke="#0a1e14" stroke-width="1.2" opacity="0.28" stroke-linecap="round"/>
+    <line x2="114" y2="18"   stroke="#0a1e14" stroke-width="1.0" opacity="0.20" stroke-linecap="round"/>
+    <line x2="-114" y2="18"  stroke="#0a1e14" stroke-width="1.0" opacity="0.20" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 3：右上角，小葉，仰角較淡 ──────────────────────────────── -->
+  <g transform="translate(378,148) rotate(-36)" filter="url(#ink)">
+    <ellipse rx="92" ry="80" fill="url(#lg3)" opacity="0.74"/>
+    <ellipse rx="13" ry="18" cy="-70" fill="#f2e6ce" opacity="0.99"/>
+    <line y1="-2" y2="-74" stroke="#143220" stroke-width="1.7" opacity="0.40" stroke-linecap="round"/>
+    <line x2="66"  y2="-37" stroke="#143220" stroke-width="1.0" opacity="0.26" stroke-linecap="round"/>
+    <line x2="-66" y2="-37" stroke="#143220" stroke-width="1.0" opacity="0.26" stroke-linecap="round"/>
+  </g>
+
+  <!-- ─── 荷葉 4：左側，半入畫面，捲邊 ───────────────────────────────── -->
+  <g transform="translate(-32,422) rotate(14)">
+    <ellipse rx="86" ry="75" fill="#1c4530" opacity="0.68" filter="url(#ink)"/>
+    <!-- 捲邊高光 -->
+    <ellipse rx="24" ry="14" cx="58" cy="-55" fill="#2e6845" opacity="0.40"/>
+  </g>
+
+  <!-- ─── 荷梗（蓮莖，常玉以細筆表現） ────────────────────────────────── -->
+  <!-- 梗1 → 左下大葉 -->
+  <path d="M 48,870 C 38,838 24,808 22,778 C 18,756 22,750 22,748"
+        stroke="#503818" stroke-width="3.5" fill="none" opacity="0.72" stroke-linecap="round"/>
+  <!-- 梗2 → 右側中葉 -->
+  <path d="M 338,870 C 358,800 388,720 408,645 C 420,590 418,550 418,532"
+        stroke="#443018" stroke-width="3.0" fill="none" opacity="0.68" stroke-linecap="round"/>
+  <!-- 梗3 → 右上小葉 -->
+  <path d="M 296,870 C 318,748 348,588 368,388 C 376,268 378,198 378,148"
+        stroke="#443018" stroke-width="2.5" fill="none" opacity="0.60" stroke-linecap="round"/>
+  <!-- 梗4 → 盛開荷花 -->
+  <path d="M 324,870 C 336,768 344,660 340,558 C 338,502 338,462 338,432"
+        stroke="#443018" stroke-width="2.2" fill="none" opacity="0.64" stroke-linecap="round"/>
+  <!-- 梗5 → 花苞 -->
+  <path d="M 150,870 C 138,768 118,648 104,528 C 96,460 95,415 95,392"
+        stroke="#503818" stroke-width="2.0" fill="none" opacity="0.60" stroke-linecap="round"/>
+
+  <!-- ─── 荷花（盛開）─────────────────────────────────────────────────── -->
+  <g transform="translate(338,415)">
+    <!-- 外層 8 瓣 -->
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-37" rx="13" ry="35" fill="url(#pg1)" opacity="0.72" transform="rotate(315)"/>
+    <!-- 內層 6 瓣 -->
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(60)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(120)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(240)"/>
+    <ellipse cx="0" cy="-27" rx="11" ry="27" fill="url(#pg2)" opacity="0.90" transform="rotate(300)"/>
+    <!-- 蓮蓬 -->
+    <circle r="15" fill="#d4a840" opacity="0.96"/>
+    <circle r="10" fill="#c09030" opacity="0.92"/>
+    <!-- 蓮子 -->
+    <circle cx="0"   cy="-6.5" r="2.2" fill="#7a5020"/>
+    <circle cx="5.6" cy="3.2"  r="2.2" fill="#7a5020"/>
+    <circle cx="-5.6" cy="3.2" r="2.2" fill="#7a5020"/>
+    <circle cx="0"   cy="8.5"  r="2.2" fill="#7a5020"/>
+  </g>
+
+  <!-- ─── 花苞（含苞待放） ─────────────────────────────────────────────── -->
+  <g transform="translate(95,380)">
+    <!-- 花萼 -->
+    <ellipse rx="11" ry="9" cy="25" fill="#265a3a" opacity="0.88"/>
+    <!-- 花瓣 -->
+    <ellipse cx="0" cy="-24" rx="10" ry="29" fill="#d080a0" opacity="0.80" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-22" rx="9"  ry="25" fill="#e8a0bc" opacity="0.86" transform="rotate(28)"/>
+    <ellipse cx="0" cy="-22" rx="9"  ry="25" fill="#e8a0bc" opacity="0.86" transform="rotate(-28)"/>
+    <ellipse cx="0" cy="-20" rx="7"  ry="21" fill="#fdd8ea" opacity="0.93" transform="rotate(0)"/>
+  </g>
+
+  <!-- ─── 荷葉水珠（常玉畫荷常見細節）────────────────────────────────── -->
+  <circle cx="20" cy="720" r="5.0" fill="rgba(255,255,255,0.65)" opacity="0.80"/>
+  <circle cx="33" cy="735" r="3.2" fill="rgba(255,255,255,0.55)" opacity="0.75"/>
+  <circle cx="9"  cy="738" r="3.8" fill="rgba(255,255,255,0.60)" opacity="0.78"/>
+  <circle cx="26" cy="748" r="2.2" fill="rgba(255,255,255,0.50)" opacity="0.65"/>
+
+  <!-- ─── 仿常玉落款紅印 ─────────────────────────────────────────────── -->
+  <g transform="translate(394,798)">
+    <rect x="-14" y="-14" width="28" height="28" rx="4" fill="#b82828" opacity="0.82"/>
+    <text x="0" y="7" font-size="15" text-anchor="middle" fill="#fff"
+          font-family="serif" font-weight="700" opacity="0.96">荷</text>
+  </g>
+</svg>
+
+<!-- 隱藏的 bg-particles（JS 仍會呼叫，但 CSS 已隱藏） -->
+<div class="bg-particles" id="bg-particles"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>🌸 間歇訓練計時器</h1>
+    <div class="subtitle">雁君的專屬運動夥伴</div>
+  </div>
+  <div class="card">
+
+    <!-- 設定畫面 -->
+    <div id="setup">
+      <div class="section-title">設定訓練參數</div>
+      <div class="input-group">
+        <div class="input-label"><span>🚶</span><span>快走時間 <span class="unit">（分鐘）</span></span></div>
+        <div class="number-control">
+          <button class="num-btn" onclick="adjustValue('walk-min',-0.5)">−</button>
+          <input class="num-input" type="number" id="walk-min" value="1" step="0.5" min="0.5" oninput="calcTotal()">
+          <button class="num-btn" onclick="adjustValue('walk-min', 0.5)">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label"><span>🏃</span><span>慢跑時間 <span class="unit">（分鐘）</span></span></div>
+        <div class="number-control">
+          <button class="num-btn" onclick="adjustValue('jog-min',-0.5)">−</button>
+          <input class="num-input" type="number" id="jog-min" value="1" step="0.5" min="0.5" oninput="calcTotal()">
+          <button class="num-btn" onclick="adjustValue('jog-min', 0.5)">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label"><span>🔁</span><span>訓練組數 <span class="unit">（組）</span></span></div>
+        <div class="number-control">
+          <button class="num-btn" onclick="adjustValue('sets',-1)">−</button>
+          <input class="num-input" type="number" id="sets" value="5" step="1" min="1" oninput="calcTotal()">
+          <button class="num-btn" onclick="adjustValue('sets', 1)">+</button>
+        </div>
+      </div>
+      <div class="total-preview">
+        <span class="label">⏱ 預估總時間</span>
+        <span class="value" id="est-total">10.0 分鐘</span>
+      </div>
+      <button class="btn-start" onclick="startWorkout()">🌸 開始訓練！</button>
+      <div class="history-section">
+        <div class="history-header">
+          <span class="history-title">📋 運動紀錄</span>
+          <div class="history-actions">
+            <button class="btn-small" onclick="downloadCSV()">📥 CSV</button>
+            <button class="btn-small" onclick="clearAll()" style="border-color:rgba(180,50,50,.30);color:rgba(180,50,50,.65)">🗑 清空</button>
+          </div>
+        </div>
+        <table class="history-table">
+          <thead><tr><th>日期時間</th><th>設定</th><th>時間(分)</th><th></th></tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 訓練畫面 -->
+    <div id="workout-area">
+      <div id="completion-screen" style="display:none">
+        <div class="celebration">
+          <span class="trophy">🏆</span>
+          <div class="congrats">訓練完成！</div>
+          <div class="personal-msg">雁君你真的很棒！</div>
+          <div class="encourage">汗水是最美的勳章 🌸<br>下次繼續努力，你做到了！</div>
+        </div>
+        <button class="btn-finish" onclick="resetToSetup()">🌸 再來一次！</button>
+      </div>
+      <div id="active-workout">
+        <div class="phase-bar" id="phase-bar"></div>
+        <div class="set-info" id="set-info">第 1 組 / 共 5 組</div>
+        <div class="status-row">
+          <span class="status-badge badge-walk" id="status-badge">🚶 快走階段</span>
+        </div>
+        <div class="timer-container">
+          <svg class="timer-svg" viewBox="0 0 220 220">
+            <circle class="timer-track" cx="110" cy="110" r="100"/>
+            <circle class="timer-progress" id="timer-arc" cx="110" cy="110" r="100" stroke="url(#walkGrad)"/>
+            <defs>
+              <linearGradient id="walkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#c87010"/><stop offset="100%" style="stop-color:#e8a820"/>
+              </linearGradient>
+              <linearGradient id="jogGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#1a7a50"/><stop offset="100%" style="stop-color:#38c870"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="timer-inner">
+            <div class="timer-display" id="timer-display">01:00</div>
+            <div class="timer-label">剩餘時間</div>
+          </div>
+        </div>
+        <div class="motivation" id="motivation-msg">準備好了嗎？加油！</div>
+        <div class="control-btns">
+          <button class="btn-control btn-pause-resume" id="pause-btn" onclick="togglePause()">⏸ 暫停</button>
+          <button class="btn-control btn-stop" onclick="confirmStop()">⏹ 結束</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── 狀態 ──────────────────────────────────────────────────────────────────────
+let timer        = null;
+let isWalkPhase  = true;
+let isPaused     = false;
+let currentSet   = 1;
+let totalSets    = 0;
+let walkSec      = 0;
+let jogSec       = 0;
+let timeLeft     = 0;
+let phaseTotalSec = 0;
+let audioCtx     = null;
+let wakeLock     = null;
+
+// ── 絕對時間追蹤（解決切換 App / 螢幕關掉後計時跑掉的問題）──────────────────
+let workoutStartTime = null;  // Date.now() 訓練開始的時間戳記
+let totalPausedMs    = 0;     // 累計暫停毫秒數
+let pauseStartTime   = null;  // 最近一次暫停的時間戳記
+let schedule         = [];    // [{phase, set, startMs, endMs}]
+let totalWorkoutMs   = 0;
+let lastTickPhase    = 'walk';
+let lastTickSet      = 1;
+
+// ── 激勵語句 ──────────────────────────────────────────────────────────────────
+const WALK_MSGS = ['放輕鬆，調整呼吸！','享受快走的節奏 🌸','棒棒的！保持步伐！','這段路程你最穩！','快走也是很棒的鍛鍊！','呼吸，放鬆，前進！'];
+const JOG_MSGS  = ['衝啊！雁君超強的！💪','跑起來！你做得到！🔥','加速！感受力量！⚡','燃燒吧！你是最棒的！','全力以赴！GO GO GO！','雁君加油！超越自己！🚀'];
+
+// ── 背景粒子（新主題中已隱藏，此函式保留以免報錯）────────────────────────
+function initParticles() {
+  const c = document.getElementById('bg-particles');
+  if (!c) return;
+  // 新主題使用 SVG 荷花畫作取代粒子動畫
+}
+
+// ── 數字控制 ──────────────────────────────────────────────────────────────────
+function adjustValue(id, delta) {
+  const el = document.getElementById(id);
+  let val = parseFloat(el.value) || 0;
+  val = Math.round((val + delta) * 10) / 10;
+  el.value = (id === 'sets') ? Math.max(1, Math.round(val)) : Math.max(0.5, val);
+  calcTotal();
+}
+function calcTotal() {
+  const w = parseFloat(document.getElementById('walk-min').value) || 0;
+  const j = parseFloat(document.getElementById('jog-min').value) || 0;
+  const s = parseInt(document.getElementById('sets').value) || 0;
+  document.getElementById('est-total').textContent = (s > 0 ? (w + j) * s : 0).toFixed(1) + ' 分鐘';
+}
+
+// ── 音效 ──────────────────────────────────────────────────────────────────────
+function initAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  // 解鎖 AudioContext（iOS 需要在使用者手勢觸發後播放一次靜音）
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  g.gain.value = 0; o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.001);
+}
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, type, dur, vol = 0.6) {
+  resumeAudio();
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+function playWalkStart()    { playTone(523,'sine',0.18,0.5); setTimeout(()=>playTone(659,'sine',0.25,0.5),180); }
+function playJogStart()     { playTone(440,'square',0.12,0.4); setTimeout(()=>playTone(554,'square',0.12,0.4),120); setTimeout(()=>playTone(659,'square',0.2,0.4),240); }
+function playCountdownBeep(){ playTone(880,'sine',0.1,0.3); }
+function playWarningBeep()  { playTone(1100,'sine',0.08,0.5); setTimeout(()=>playTone(1100,'sine',0.08,0.5),100); }
+function playFinishFanfare(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.4,0.6),i*160)); }
+
+// ── 語音（優先選女聲）────────────────────────────────────────────────────────
+let _femaleVoice = null;
+function pickFemaleVoice() {
+  if (_femaleVoice) return _femaleVoice;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const FEMALE = ['mei-jia','meijia','美佳','ting-ting','tingting','婷婷','hiumaan','hiu maan','xiaochen','曉臻','曉辰','zhiwei','yaoyao','hanhan','linlin','google 普通話'];
+  const MALE   = ['kangkang','kang kang','liang','danny','male','man','男'];
+  let best = null, bestScore = -Infinity;
+  for (const v of voices) {
+    if (!/zh|cmn|yue/i.test(v.lang)) continue;
+    const n = v.name.toLowerCase();
+    let score = 0;
+    FEMALE.forEach(k => { if (n.includes(k)) score += 10; });
+    MALE.forEach(k   => { if (n.includes(k)) score -= 20; });
+    if (score > bestScore) { bestScore = score; best = v; }
+  }
+  return (_femaleVoice = best);
+}
+function speak(text, rate = 1.05, pitch = 1.25) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; u.rate = rate; u.pitch = pitch; u.volume = 1;
+  const v = pickFemaleVoice();
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+
+// ── Wake Lock（防止螢幕自動關閉，訓練中自動重新取得）────────────────────────
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    // 當 Wake Lock 被系統釋放時（例如畫面暗掉後回來），自動重新取得
+    wakeLock.addEventListener('release', () => {
+      if (workoutStartTime !== null && !isPaused && !document.hidden) {
+        requestWakeLock();
+      }
+    });
+  } catch {}
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
+}
+
+// ── 訓練排程（絕對時間軸）───────────────────────────────────────────────────
+// 每組 = 快走 + 慢跑，共 totalSets 組
+function buildSchedule() {
+  schedule = [];
+  let t = 0;
+  for (let s = 1; s <= totalSets; s++) {
+    schedule.push({ phase: 'walk', set: s, startMs: t, endMs: t + walkSec * 1000 });
+    t += walkSec * 1000;
+    schedule.push({ phase: 'jog',  set: s, startMs: t, endMs: t + jogSec  * 1000 });
+    t += jogSec * 1000;
+  }
+  totalWorkoutMs = t;
+}
+
+// 取得訓練已進行的毫秒數（扣除暫停時間）
+function getElapsedMs() {
+  if (workoutStartTime === null) return 0;
+  let e = Date.now() - workoutStartTime - totalPausedMs;
+  if (isPaused && pauseStartTime) e -= (Date.now() - pauseStartTime);
+  return Math.max(0, e);
+}
+
+// 根據已進行時間，取得目前應在哪個 phase
+function getStateAt(elapsedMs) {
+  for (const seg of schedule) {
+    if (elapsedMs >= seg.startMs && elapsedMs < seg.endMs) {
+      return { ...seg, timeLeft: Math.max(1, Math.ceil((seg.endMs - elapsedMs) / 1000)) };
+    }
+  }
+  return null; // 全部完成
+}
+
+// ── 訓練流程 ──────────────────────────────────────────────────────────────────
+function startWorkout() {
+  const w = parseFloat(document.getElementById('walk-min').value);
+  const j = parseFloat(document.getElementById('jog-min').value);
+  totalSets = parseInt(document.getElementById('sets').value);
+  if (!w || !j || !totalSets || w <= 0 || j <= 0 || totalSets <= 0) {
+    speak('請先設定有效的訓練參數喔！', 1.05, 1.25); return;
+  }
+  walkSec = Math.round(w * 60);
+  jogSec  = Math.round(j * 60);
+
+  initAudio();
+  requestWakeLock();
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('workout-area').style.display = 'block';
+  document.getElementById('active-workout').style.display = 'block';
+  document.getElementById('completion-screen').style.display = 'none';
+
+  buildSchedule();
+  workoutStartTime = Date.now();
+  totalPausedMs    = 0;
+  pauseStartTime   = null;
+  currentSet       = 1;
+  isWalkPhase      = true;
+  isPaused         = false;
+  timeLeft         = walkSec;
+  phaseTotalSec    = walkSec;
+  lastTickPhase    = 'walk';
+  lastTickSet      = 1;
+
+  buildPhaseBar();
+  updateUI();
+  resetPauseBtn();
+
+  setTimeout(() => { speak('好！訓練開始囉！雁君，來吧！加油！', 1.08, 1.3); playWalkStart(); }, 400);
+  clearInterval(timer);
+  timer = setInterval(countdown, 500); // 500ms 輪詢，讓時間更準確
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  const btn = document.getElementById('pause-btn');
+  if (isPaused) {
+    pauseStartTime = Date.now();
+    clearInterval(timer);
+    btn.textContent = '▶ 繼續'; btn.classList.add('is-paused');
+    speak('已暫停，喘口氣，等你回來！', 1.0, 1.2);
+    saveWorkoutState(); // 儲存暫停狀態
+  } else {
+    totalPausedMs += Date.now() - pauseStartTime;
+    pauseStartTime = null;
+    clearInterval(timer);
+    timer = setInterval(countdown, 500);
+    btn.textContent = '⏸ 暫停'; btn.classList.remove('is-paused');
+    speak('繼續！雁君最棒了！衝衝衝！', 1.1, 1.3);
+    saveWorkoutState();
+  }
+}
+function resetPauseBtn() {
+  const btn = document.getElementById('pause-btn');
+  btn.textContent = '⏸ 暫停'; btn.classList.remove('is-paused');
+}
+function confirmStop() {
+  if (confirm('確定要結束這次訓練嗎？')) finishWorkout(false);
+}
+
+// ── 主計時迴圈（以絕對時間計算，不怕被節流）─────────────────────────────────
+function countdown() {
+  if (isPaused) return;
+
+  const elapsedMs = getElapsedMs();
+
+  if (elapsedMs >= totalWorkoutMs) {
+    clearInterval(timer); finishWorkout(true); return;
+  }
+
+  const state = getStateAt(elapsedMs);
+  if (!state) { clearInterval(timer); finishWorkout(true); return; }
+
+  const newTimeLeft   = state.timeLeft;
+  const phaseChanged  = state.phase !== lastTickPhase || state.set !== lastTickSet;
+
+  if (phaseChanged) {
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+    isWalkPhase   = state.phase === 'walk';
+    currentSet    = state.set;
+    phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+    if (isWalkPhase) {
+      playWalkStart();
+      setTimeout(() => speak(`太棒了！第${currentSet}組，快走，調整呼吸！你做到了！`, 1.05, 1.25), 300);
+    } else {
+      playJogStart();
+      setTimeout(() => speak(`第${currentSet}組慢跑開始！衝啊！加速！你超強的！`, 1.1, 1.32), 300);
+    }
+    updateUI();
+  }
+
+  // 只在實際剩餘秒數改變時才更新顯示（避免 500ms 觸發兩次）
+  if (newTimeLeft !== timeLeft) {
+    timeLeft = newTimeLeft;
+    if (!phaseChanged) {
+      if      (timeLeft <= 3 && timeLeft > 0) playWarningBeep();
+      else if (timeLeft <= 8 && timeLeft > 3) playCountdownBeep();
+      if (timeLeft === 5) speak('準備切換！五、四、三、二、一！', 1.12, 1.3);
+    }
+    updateTimerDisplay();
+    updateTimerArc();
+    saveWorkoutState(); // 每秒儲存狀態，讓重開後可繼續
+  }
+}
+
+function finishWorkout(completed) {
+  clearInterval(timer);
+  releaseWakeLock();
+  workoutStartTime = null;
+  clearWorkoutState(); // 清除儲存的訓練狀態
+  if (completed) {
+    saveRecord();
+    launchConfetti();
+    playFinishFanfare();
+    setTimeout(() => speak('恭喜恭喜！訓練完成！雁君，你今天真的非常非常棒！為自己鼓鼓掌！下次繼續努力，你是最厲害的！', 0.95, 1.28), 600);
+  }
+  document.getElementById('active-workout').style.display = 'none';
+  document.getElementById('completion-screen').style.display = 'block';
+}
+
+function resetToSetup() {
+  document.getElementById('workout-area').style.display = 'none';
+  document.getElementById('setup').style.display = 'block';
+  updateHistoryTable();
+}
+
+// ── 切換 App / 螢幕關掉後回來：自動同步 ────────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+
+  // 重新申請 Wake Lock（螢幕亮起時可能已被釋放）
+  if (workoutStartTime !== null && !wakeLock) requestWakeLock();
+
+  // 訓練未進行或已暫停，不需處理
+  if (workoutStartTime === null || isPaused) return;
+
+  // 1. 恢復 AudioContext（瀏覽器在背景會暫停它）
+  resumeAudio();
+
+  // 2. 計算現在應在哪個位置
+  const elapsedMs = getElapsedMs();
+  if (elapsedMs >= totalWorkoutMs) { finishWorkout(true); return; }
+
+  const state = getStateAt(elapsedMs);
+  if (!state) { finishWorkout(true); return; }
+
+  const prevPhase = lastTickPhase;
+  const prevSet   = lastTickSet;
+
+  isWalkPhase   = state.phase === 'walk';
+  currentSet    = state.set;
+  timeLeft      = state.timeLeft;
+  phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+
+  if (state.phase !== prevPhase || state.set !== prevSet) {
+    // 背景期間跨過了一個或多個 phase，更新畫面並告知
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+    updateUI();
+    const label = isWalkPhase ? `第${currentSet}組快走` : `第${currentSet}組慢跑`;
+    speak(`歡迎回來！現在是${label}，剩 ${timeLeft} 秒，繼續加油！`, 1.05, 1.25);
+  } else {
+    // 同一個 phase，只更新顯示
+    updateTimerDisplay();
+    updateTimerArc();
+    speak('歡迎回來！繼續！雁君加油！', 1.05, 1.25);
+  }
+
+  // 3. 重啟計時迴圈（原本可能已被瀏覽器節流或暫停）
+  clearInterval(timer);
+  timer = setInterval(countdown, 500);
+});
+
+// ── UI 更新 ───────────────────────────────────────────────────────────────────
+function updateUI() {
+  updateTimerDisplay(); updateTimerArc(); updateStatusBadge();
+  updateSetInfo(); updateMotivation(); updatePhaseBar();
+}
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+  const s = (timeLeft % 60).toString().padStart(2,'0');
+  const el = document.getElementById('timer-display');
+  el.textContent = `${m}:${s}`;
+  if (timeLeft <= 5 && timeLeft > 0) { el.classList.remove('heartbeat'); void el.offsetWidth; el.classList.add('heartbeat'); }
+}
+function updateTimerArc() {
+  const arc = document.getElementById('timer-arc');
+  const frac = phaseTotalSec > 0 ? timeLeft / phaseTotalSec : 0;
+  arc.style.strokeDashoffset = 628 * (1 - frac);
+  arc.setAttribute('stroke', isWalkPhase ? 'url(#walkGrad)' : 'url(#jogGrad)');
+}
+function updateStatusBadge() {
+  const b = document.getElementById('status-badge');
+  b.className = 'status-badge ' + (isWalkPhase ? 'badge-walk' : 'badge-jog');
+  b.textContent = isWalkPhase ? '🚶 快走階段' : '🏃 慢跑階段';
+}
+function updateSetInfo() {
+  document.getElementById('set-info').textContent = `第 ${currentSet} 組 ／ 共 ${totalSets} 組`;
+}
+function updateMotivation() {
+  const msgs = isWalkPhase ? WALK_MSGS : JOG_MSGS;
+  const el = document.getElementById('motivation-msg');
+  el.style.opacity = '0';
+  setTimeout(() => { el.textContent = msgs[Math.floor(Math.random()*msgs.length)]; el.style.opacity = '1'; }, 200);
+}
+
+// ── Phase Bar ─────────────────────────────────────────────────────────────────
+function buildPhaseBar() {
+  const bar = document.getElementById('phase-bar');
+  bar.innerHTML = '';
+  for (let i = 0; i < totalSets * 2; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'phase-seg'; seg.id = `seg-${i}`;
+    bar.appendChild(seg);
+  }
+  updatePhaseBar();
+}
+function updatePhaseBar() {
+  for (let i = 0; i < totalSets * 2; i++) {
+    const seg = document.getElementById(`seg-${i}`);
+    if (!seg) continue;
+    const isWalkSeg = i % 2 === 0;
+    const setNum    = Math.floor(i / 2) + 1;
+    let isDone = false, isActive = false;
+    if (setNum < currentSet) {
+      isDone = true;
+    } else if (setNum === currentSet) {
+      if (isWalkSeg) { if (isWalkPhase) isActive = true; else isDone = true; }
+      else           { if (!isWalkPhase) isActive = true; }
+    }
+    seg.className = 'phase-seg';
+    if (isActive) seg.classList.add('active');
+    else if (isDone) seg.classList.add(isWalkSeg ? 'walk-done' : 'jog-done');
+  }
+}
+
+// ── 彩色紙屑（荷花色系）──────────────────────────────────────────────────────
+function launchConfetti() {
+  const colors = ['#d4a040','#c87010','#e8a0b8','#c06080','#265a3a','#8a3050','#f5d8ea','#fde8c0'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*10}px;height:${6+Math.random()*10}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.5}s;`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 3000);
+    }, i * 30);
+  }
+}
+
+// ── 訓練狀態持久化（頁面關閉 / 重開後可繼續）────────────────────────────────
+function saveWorkoutState() {
+  if (workoutStartTime === null) {
+    localStorage.removeItem('activeWorkout');
+    return;
+  }
+  localStorage.setItem('activeWorkout', JSON.stringify({
+    walkSec, jogSec, totalSets,
+    workoutStartTime,
+    totalPausedMs,
+    isPaused,
+    pauseStartTime: isPaused ? pauseStartTime : null,
+    walkMin: document.getElementById('walk-min').value,
+    jogMin:  document.getElementById('jog-min').value
+  }));
+}
+
+function clearWorkoutState() {
+  localStorage.removeItem('activeWorkout');
+}
+
+function checkResumeWorkout() {
+  const raw = localStorage.getItem('activeWorkout');
+  if (!raw) return;
+  let s;
+  try { s = JSON.parse(raw); } catch { localStorage.removeItem('activeWorkout'); return; }
+
+  // 計算目前已過時間，確認訓練是否還在進行中
+  const pausedExtra = s.isPaused && s.pauseStartTime ? (Date.now() - s.pauseStartTime) : 0;
+  const elapsed = Date.now() - s.workoutStartTime - s.totalPausedMs - pausedExtra;
+  const total = s.totalSets * (s.walkSec + s.jogSec) * 1000;
+  if (elapsed >= total) { localStorage.removeItem('activeWorkout'); return; }
+
+  if (!confirm('找到未完成的訓練！要繼續嗎？\n\n（點「確定」恢復訓練，點「取消」放棄）')) {
+    localStorage.removeItem('activeWorkout');
+    return;
+  }
+  resumeSavedWorkout(s);
+}
+
+function resumeSavedWorkout(s) {
+  walkSec   = s.walkSec;
+  jogSec    = s.jogSec;
+  totalSets = s.totalSets;
+  workoutStartTime = s.workoutStartTime;
+  totalPausedMs    = s.totalPausedMs;
+  isPaused         = s.isPaused;
+  pauseStartTime   = s.pauseStartTime;
+
+  document.getElementById('walk-min').value = s.walkMin;
+  document.getElementById('jog-min').value  = s.jogMin;
+  document.getElementById('sets').value     = s.totalSets;
+
+  initAudio();
+  requestWakeLock();
+  buildSchedule();
+
+  document.getElementById('setup').style.display         = 'none';
+  document.getElementById('workout-area').style.display  = 'block';
+  document.getElementById('active-workout').style.display = 'block';
+  document.getElementById('completion-screen').style.display = 'none';
+
+  buildPhaseBar();
+
+  const elapsedMs = getElapsedMs();
+  const state     = getStateAt(elapsedMs);
+  if (state) {
+    isWalkPhase   = state.phase === 'walk';
+    currentSet    = state.set;
+    timeLeft      = state.timeLeft;
+    phaseTotalSec = isWalkPhase ? walkSec : jogSec;
+    lastTickPhase = state.phase;
+    lastTickSet   = state.set;
+  }
+
+  updateUI();
+  resetPauseBtn();
+
+  if (isPaused) {
+    const btn = document.getElementById('pause-btn');
+    btn.textContent = '▶ 繼續'; btn.classList.add('is-paused');
+    speak('找到你未完成的訓練，已暫停。按繼續就出發！', 1.05, 1.25);
+  } else {
+    speak('歡迎回來！繼續你的訓練！雁君加油！', 1.05, 1.25);
+    clearInterval(timer);
+    timer = setInterval(countdown, 500);
+  }
+}
+
+// ── 運動紀錄 ─────────────────────────────────────────────────────────────────
+function saveRecord() {
+  const totalMin = (((walkSec + jogSec) * totalSets) / 60).toFixed(1);
+  const now = new Date(), pad = n => String(n).padStart(2,'0');
+  const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const wMin = document.getElementById('walk-min').value;
+  const jMin = document.getElementById('jog-min').value;
+  const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  history.push({ date: dateStr, setting: `快${wMin}/慢${jMin}/${totalSets}組`, total: totalMin });
+  localStorage.setItem('workoutHistory', JSON.stringify(history));
+}
+function updateHistoryTable() {
+  const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  const tbody = document.getElementById('history-body');
+  tbody.innerHTML = '';
+  if (!history.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:rgba(120,75,35,.40);text-align:center;padding:12px">還沒有紀錄，快去訓練！🌸</td></tr>';
+    return;
+  }
+  for (let i = history.length - 1; i >= 0; i--) {
+    const r = history[i], tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.date}</td><td>${r.setting}</td><td style="text-align:center">${r.total}</td><td><button class="btn-del" onclick="deleteRecord(${i})">✕</button></td>`;
+    tbody.appendChild(tr);
+  }
+}
+function deleteRecord(i) {
+  if (!confirm('確定刪除這筆紀錄？')) return;
+  const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  h.splice(i, 1); localStorage.setItem('workoutHistory', JSON.stringify(h)); updateHistoryTable();
+}
+function clearAll() {
+  const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  if (!h.length) { alert('目前沒有紀錄！'); return; }
+  if (confirm('確定清空所有運動紀錄？')) { localStorage.removeItem('workoutHistory'); updateHistoryTable(); }
+}
+function downloadCSV() {
+  const h = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+  if (!h.length) { alert('沒有紀錄可下載！'); return; }
+  let csv = '\uFEFF日期,設定,總時間(分)\n';
+  h.forEach(r => { csv += `${r.date},${r.setting},${r.total}\n`; });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'workout_log.csv'; a.click();
+}
+
+// ── PWA 安裝提示 ───────────────────────────────────────────────────────────────
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  document.getElementById('install-banner').classList.add('visible');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').classList.remove('visible');
+  _deferredInstallPrompt = null;
+});
+document.getElementById('btn-install-pwa').addEventListener('click', async () => {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  const { outcome } = await _deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('install-banner').classList.remove('visible');
+  }
+  _deferredInstallPrompt = null;
+});
+function dismissInstallBanner() {
+  document.getElementById('install-banner').classList.remove('visible');
+}
+
+// ── 離線 / 在線偵測 ───────────────────────────────────────────────────────────
+function updateOnlineStatus() {
+  const notice = document.getElementById('offline-notice');
+  if (!navigator.onLine) {
+    notice.classList.add('visible');
+  } else {
+    notice.classList.remove('visible');
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ── 初始化 ────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  initParticles();
+  calcTotal();
+  updateHistoryTable();
+  updateOnlineStatus();
+  if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => { _femaleVoice = null; pickFemaleVoice(); };
+  }
+
+  }
+
+  // 開啟時檢查是否有未完成的訓練，若有則詢問是否繼續
+  checkResumeWorkout();
+};
+</script>
+</body>
+</html>
