@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>雁君的間歇訓練計時器 💪</title>
-
+  <meta name="theme-color" content="#c06080">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="間歇訓練">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
 
@@ -610,9 +614,7 @@ async function requestWakeLock() {
     wakeLock = await navigator.wakeLock.request('screen');
     // 當 Wake Lock 被系統釋放時（例如畫面暗掉後回來），自動重新取得
     wakeLock.addEventListener('release', () => {
-      if (workoutStartTime !== null && !isPaused && !document.hidden) {
-        requestWakeLock();
-      }
+      if (!document.hidden) requestWakeLock();
     });
   } catch {}
 }
@@ -767,7 +769,6 @@ function countdown() {
 
 function finishWorkout(completed) {
   clearInterval(timer);
-  releaseWakeLock();
   workoutStartTime = null;
   clearWorkoutState(); // 清除儲存的訓練狀態
   if (completed) {
@@ -791,7 +792,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
 
   // 重新申請 Wake Lock（螢幕亮起時可能已被釋放）
-  if (workoutStartTime !== null && !wakeLock) requestWakeLock();
+  if (!wakeLock) requestWakeLock();
 
   // 訓練未進行或已暫停，不需處理
   if (workoutStartTime === null || isPaused) return;
@@ -1082,6 +1083,7 @@ window.addEventListener('offline', updateOnlineStatus);
 
 // ── 初始化 ────────────────────────────────────────────────────────────────────
 window.onload = () => {
+  requestWakeLock();
   initParticles();
   calcTotal();
   updateHistoryTable();
