@@ -618,6 +618,7 @@ async function requestWakeLock() {
     wakeLock = await navigator.wakeLock.request('screen');
     // 當 Wake Lock 被系統釋放時（例如畫面暗掉後回來），自動重新取得
     wakeLock.addEventListener('release', () => {
+      wakeLock = null;
       if (workoutStartTime !== null && !isPaused && !document.hidden) requestWakeLock();
     });
   } catch {}
