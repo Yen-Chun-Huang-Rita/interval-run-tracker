@@ -611,6 +611,38 @@ function speak(text, rate = 1.05, pitch = 1.25) {
   window.speechSynthesis.speak(u);
 }
 
+// ── 背景音訊保活（iOS 螢幕關閉時必須有 <audio> 串流，Web Audio API 才能繼續）──
+let _bgAudio = null;
+let _silentWavUrl = null;
+
+function getSilentWavUrl() {
+  if (_silentWavUrl) return _silentWavUrl;
+  // 產生 0.1 秒無聲 WAV，作為 iOS 音訊 Session 佔位用
+  const sr = 22050, n = 2205; // 0.1s @ 22050Hz mono 16bit
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0,'RIFF'); v.setUint32(4, 36 + n * 2, true);
+  w(8,'WAVE'); w(12,'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);  v.setUint32(24, sr, true);
+  v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true); w(36,'data');
+  v.setUint32(40, n * 2, true); // data 全為 0 = 無聲
+  _silentWavUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  return _silentWavUrl;
+}
+function startBgAudio() {
+  if (_bgAudio) { if (_bgAudio.paused) _bgAudio.play().catch(() => {}); return; }
+  _bgAudio = new Audio(getSilentWavUrl());
+  _bgAudio.loop = true;
+  _bgAudio.volume = 0.01;
+  _bgAudio.play().catch(() => {});
+}
+function stopBgAudio() {
+  if (_bgAudio) { _bgAudio.pause(); _bgAudio.src = ''; _bgAudio = null; }
+}
+
 // ── Wake Lock（防止螢幕自動關閉，訓練中自動重新取得）────────────────────────
 async function requestWakeLock() {
   if (!('wakeLock' in navigator)) return;
@@ -671,6 +703,7 @@ function startWorkout() {
   jogSec  = Math.round(j * 60);
 
   initAudio();
+  startBgAudio();
   requestWakeLock();
 
   document.getElementById('setup').style.display = 'none';
@@ -775,6 +808,7 @@ function countdown() {
 function finishWorkout(completed) {
   clearInterval(timer);
   releaseWakeLock();
+  stopBgAudio();
   workoutStartTime = null;
   clearWorkoutState(); // 清除儲存的訓練狀態
   if (completed) {
@@ -797,8 +831,11 @@ function resetToSetup() {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
 
-  // 重新申請 Wake Lock（螢幕亮起時可能已被釋放）
-  if (workoutStartTime !== null && !wakeLock) requestWakeLock();
+  // 重新申請 Wake Lock 與背景音訊（螢幕亮起時可能已被釋放）
+  if (workoutStartTime !== null) {
+    if (!wakeLock) requestWakeLock();
+    startBgAudio();
+  }
 
   // 訓練未進行或已暫停，不需處理
   if (workoutStartTime === null || isPaused) return;
@@ -971,6 +1008,7 @@ function resumeSavedWorkout(s) {
   document.getElementById('sets').value     = s.totalSets;
 
   initAudio();
+  startBgAudio();
   requestWakeLock();
   buildSchedule();
 
